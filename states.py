@@ -3,11 +3,11 @@ from typing import Optional, Dict, Any
 
 
 class Tags:
-    PLAN = ("<PLAN>", "</PLAN>")
-    THOUGHT = ("<THOUGHT>", "</THOUGHT>")
-    ACTION = ("<ACTION>", "</ACTION>")
-    ARGS = ("<ARGS>", "</ARGS>")
-    ANSWER = ("<ANSWER>", "</ANSWER>")
+    PLAN = "<PLAN>"
+    THOUGHT = "<THOUGHT>"
+    ACTION = "<ACTION>"
+    ARGS = "<ARGS>"
+    ANSWER = "<ANSWER>"
 
     ALL = [PLAN, THOUGHT, ACTION, ARGS, ANSWER]
 

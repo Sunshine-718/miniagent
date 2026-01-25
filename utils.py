@@ -9,33 +9,54 @@ import datetime
 
 
 class Parser:
-    @staticmethod
-    def _get_tag_content(text: str, tag_pair: tuple):
-        pattern = re.escape(tag_pair[0]) + r'(.*?)(' + re.escape(tag_pair[1]) + r'|$)'
-        match = re.search(pattern, text, re.DOTALL)
-        return match.group(1).strip() if match else None
-
     @classmethod
-    def parse_response(cls, response):
+    def parse_response(cls, text: str):
         state = AgentState()
 
-        state.plan = cls._get_tag_content(response, Tags.PLAN)
-        state.thought = cls._get_tag_content(response, Tags.THOUGHT)
-        state.final_answer = cls._get_tag_content(response, Tags.ANSWER)
-        state.action_name = cls._get_tag_content(response, Tags.ACTION)
+        text = text.replace('\r\n', '\n')
 
-        if state.action_name == "[REFRESH]":
-            state.is_refresh = True
-            return state
+        # 一次性提取所有 "## Title" -> "Content" 的键值对
+        pattern = re.compile(
+            r'(?m)^##\s*(?P<header>.+?)\s*$(?P<content>[\s\S]*?)(?=^##|\Z)'
+        )
 
-        args_text = cls._get_tag_content(response, Tags.ARGS)
-        if args_text:
-            # 清理 Markdown 代码块符号
-            clean_json = re.sub(r'^```\w*\s*|\s*```$', '', args_text.strip())
-            try:
-                state.action_args = json.loads(clean_json)
-            except json.JSONDecodeError:
-                state.error = "Invalid JSON in arguments"
+        sections = {
+            m.group('header').strip().lower(): m.group('content').strip()
+            for m in pattern.finditer(text)
+        }
+
+        state.plan = sections.get('plan')
+        state.thought = sections.get('thought')
+        state.final_answer = sections.get('answer')
+
+        action_raw = sections.get('action')
+        if action_raw:
+            state.action_name = action_raw.split('\n')[0].strip()
+            if state.action_name == "[REFRESH]":
+                state.is_refresh = True
+
+        args_raw = sections.get('args')
+        if args_raw and state.action_name:
+            code_match = re.search(r'```(?:json|python)?\s*(.*?)```', args_raw, re.DOTALL)
+            if code_match:
+                content = code_match.group(1).strip()
+                if state.action_name == "python_repl":
+                    state.action_args = {"code": content}
+                else:
+                    try:
+                        state.action_args = json.loads(content)
+                    except json.JSONDecodeError:
+                        state.error = "Args JSON 解析失败"
+            else:
+                if state.action_name == 'python_repl':
+                    state.action_args = {"code": args_raw}
+                elif not args_raw.strip():
+                    state.action_args = {}
+                else:
+                    try:
+                        state.action_args = json.loads(args_raw)
+                    except:
+                        state.error = "未找到代码块 (```) 且无法解析JSON"
         return state
 
 
@@ -88,7 +109,7 @@ class LogManager:
         if role == "User":
             log_entry = f"\n\n## 👤 User ({timestamp})\n\n{content}\n"
         elif role == "Agent":
-            log_entry = f"\n\n### 🤖 Agent ({timestamp})\n\n```xml\n{content}\n```\n"
+            log_entry = f"\n\n### 🤖 Agent ({timestamp})\n\n```\n{content}\n```\n"
         elif role == "System":  # 通常是 Observation
             log_entry = f"\n\n> 🛠️ **System/Observation** ({timestamp})\n\n```\n{content}\n```\n"
 

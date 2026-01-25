@@ -3,7 +3,6 @@ from config import settings
 from utils import ToolManager, Parser
 from agent import ReactAgent
 from interface import ConsoleUI
-from states import Tags
 
 
 def main():
@@ -59,11 +58,13 @@ def main():
                 if state.is_refresh:
                     agent.reload_toolset()
                     current_prompt = "Observation: Tools reloaded successfully."
+                    ui.print_observation(current_prompt)
                     continue
 
                 if state.error:
                     ui.print_error(state.error)
                     current_prompt = f"Observation: Error: {state.error}. Please reflect and retry."
+                    ui.print_observation(current_prompt)
                     continue
 
                 if state.has_action:
@@ -72,9 +73,11 @@ def main():
                     agent.add_observation(result)  # 写入历史
                     # 下一轮循环自动开始，无需修改 prompt，因为历史记录里已经有了 Observation
                     current_prompt = "Observation: (See history for result)"
+                    ui.print_observation(current_prompt)
 
                 if not state.has_action and not state.final_answer:
-                    current_prompt = f"System Hint: You stopped without an Action or Answer. Please continue properly using {Tags.THOUGHT[0]} tags."
+                    current_prompt = f"System Hint: You stopped without an Action or Answer. Please continue properly using '## Thought' or '## Action' sections."
+                    ui.print_observation(current_prompt)
 
         except KeyboardInterrupt:
             ui.console.print("\n[yellow]Paused. Type 'quit' to exit or Enter to continue.[/yellow]")
