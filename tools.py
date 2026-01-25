@@ -686,3 +686,106 @@ def upload_to_github(commit_message: str = "Update code files") -> str:
     results.append(f"推送结果: {result3}")
 
     return "\n".join(results)
+
+
+def regex_search_in_file(file_path: str, pattern: str, flags: int = 0) -> str:
+    """
+    使用正则表达式在文件中搜索匹配的内容。
+    
+    参数:
+        file_path: 字符串，文件路径
+        pattern: 字符串，正则表达式模式
+        flags: 整数，可选的正则表达式标志（如 re.IGNORECASE, re.MULTILINE 等）
+    返回:
+        匹配结果字符串（每行一个匹配）或错误信息
+    用法:
+        regex_search_in_file(file_path=<文件路径>, pattern=<正则表达式>, flags=<标志>)
+    """
+    import re
+    
+    if not os.path.exists(file_path):
+        return f"错误：文件 {file_path} 不存在。"
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        matches = re.findall(pattern, content, flags)
+        
+        if not matches:
+            return "未找到匹配项。"
+        
+        result_lines = []
+        for i, match in enumerate(matches, 1):
+            if isinstance(match, tuple):
+                # 如果有多个捕获组，显示所有组
+                match_str = ', '.join(str(g) for g in match if g is not None)
+                result_lines.append(f"匹配 {i}: [{match_str}]")
+            else:
+                result_lines.append(f"匹配 {i}: {match}")
+        
+        # 添加统计信息
+        result_lines.append(f"\n总计找到 {len(matches)} 个匹配项。")
+        return '\n'.join(result_lines)
+        
+    except re.error as e:
+        return f"正则表达式错误：{str(e)}"
+    except Exception as e:
+        return f"读取文件时出错：{str(e)}"
+
+
+def count_file_lines(file_path: str) -> str:
+    """
+    统计文件的行数信息。
+    
+    参数:
+        file_path: 字符串，文件路径
+    
+    返回:
+        包含总行数、非空行数和空行数的统计信息字符串
+    
+    用法:
+        count_file_lines(file_path=<文件路径>)
+    """
+    if not os.path.exists(file_path):
+        return f"错误：文件 {file_path} 不存在。"
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        total_lines = len(lines)
+        non_empty_lines = 0
+        empty_lines = 0
+        
+        for line in lines:
+            if line.strip() == '':
+                empty_lines += 1
+            else:
+                non_empty_lines += 1
+        
+        # 计算百分比
+        if total_lines > 0:
+            non_empty_percent = (non_empty_lines / total_lines) * 100
+            empty_percent = (empty_lines / total_lines) * 100
+        else:
+            non_empty_percent = 0.0
+            empty_percent = 0.0
+        
+        result = f"文件: {file_path}\n"
+        result += f"总行数: {total_lines}\n"
+        result += f"非空行数: {non_empty_lines} ({non_empty_percent:.1f}%)\n"
+        result += f"空行数: {empty_lines} ({empty_percent:.1f}%)\n"
+        
+        # 添加一些分析建议
+        if empty_percent > 30:
+            result += "提示：文件中有较多空行，建议适当清理以提升可读性。"
+        elif non_empty_percent == 100:
+            result += "提示：文件中没有空行，代码紧凑。"
+        else:
+            result += "提示：空行比例适中，代码结构良好。"
+        
+        return result
+        
+    except Exception as e:
+        return f"读取文件时出错：{str(e)}"

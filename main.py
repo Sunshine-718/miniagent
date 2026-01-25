@@ -57,8 +57,7 @@ def main():
                     break
 
                 if state.is_refresh:
-                    tools.reload()
-                    agent.reset()  # 刷新后通常需要更新 System Prompt
+                    agent.reload_toolset()
                     current_prompt = "Observation: Tools reloaded successfully."
                     continue
 

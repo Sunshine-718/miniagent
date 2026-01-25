@@ -66,7 +66,7 @@ class ToolManager:
 class LogManager:
     def __init__(self, config):
         self.config = config
-        self.log_file = self.init_log()
+        self.init_log()
 
     def init_log(self, path=None):
         if path is None:
@@ -79,7 +79,8 @@ class LogManager:
             ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             with open(path, 'a', encoding='utf-8') as f:
                 f.write(f'\n\n# Session {ts}\n\n')
-        return path
+        self.log_file = path
+        return self
 
     def log(self, role: str, content: str):
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")

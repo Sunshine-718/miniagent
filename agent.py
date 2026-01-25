@@ -14,7 +14,16 @@ class ReactAgent:
 
     def reset(self):
         self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
-    
+        self.logger.init_log()
+        self.reload_toolset()
+
+    def reload_toolset(self):
+        self.tool_manager.reload()
+        if self.history:
+            self.history[0] = {'role': 'system', 'content': self._build_system_prompt()}
+        else:
+            self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
+
     def load_history(self, history_path):
         self.reset()
         with open(history_path, 'r', encoding='utf-8') as file:
@@ -34,27 +43,28 @@ class ReactAgent:
         sys_msg = self.history[0]
         first_round = []
         if len(self.history) >= 3:
-            first_round = self.history[1:3] # User + Agent
+            first_round = self.history[1:3]  # User + Agent
         retain_count = settings.RETAIN_RECENT * 2
         recent = self.history[-retain_count:]
 
         if len(self.history) > 3 + retain_count:
-             omission_hint = {'role': 'system', 'content': '[System Note: Middle conversation history compressed/omitted to save memory]'}
-             self.history = [sys_msg] + first_round + [omission_hint] + recent
+            omission_hint = {'role': 'system',
+                             'content': '[System Note: Middle conversation history compressed/omitted to save memory]'}
+            self.history = [sys_msg] + first_round + [omission_hint] + recent
         else:
             self.history = [sys_msg] + self.history[-retain_count:]
-            
+
         self.logger.log("System", "History compressed.")
-    
+
     def step_stream(self, user_input):
         self.history.append({'role': 'user', 'content': user_input})
         self.logger.log("User", user_input)
         self._compress_history()
-        
+
         response_stream = self.client.chat.completions.create(
             model='deepseek-chat', messages=self.history, stream=True
         )
-        
+
         full_content = ""
 
         for chunk in response_stream:
@@ -62,11 +72,11 @@ class ReactAgent:
             if text:
                 full_content += text
                 yield text
-        
+
         self.history.append({'role': 'assistant', 'content': full_content})
         self.logger.log("Agent", full_content)
         return full_content
-    
+
     def add_observation(self, content):
         msg = f'Observation: {content}'
         self.history.append({'role': 'user', 'content': msg})
