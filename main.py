@@ -1,9 +1,9 @@
+from pathlib import Path
 from config import settings
 from utils import ToolManager, Parser
 from agent import ReactAgent
 from interface import ConsoleUI
 from states import Tags
-from pathlib import Path
 
 
 def main():
