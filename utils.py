@@ -1,60 +1,98 @@
+import os
 import re
 import json
-from constants import Tags
+import importlib
+import inspect
+from states import AgentState, Tags
+import tools
+import datetime
 
 
-def get_tag_regex(open_tag, close_tag):
-    return re.escape(open_tag) + r'(.*?)(' + re.escape(close_tag) + r'|$)'
+class Parser:
+    @staticmethod
+    def _get_tag_content(text: str, tag_pair: tuple):
+        pattern = re.escape(tag_pair[0]) + r'(.*?)(' + re.escape(tag_pair[1]) + r'|$)'
+        match = re.search(pattern, text, re.DOTALL)
+        return match.group(1).strip() if match else None
 
+    @classmethod
+    def parse_response(cls, response):
+        state = AgentState()
 
-def parse_agent_response(response: str):
-    """
-    基于 XML 标签 [TAG]...[/TAG] 的解析器，边界严格，无歧义。
-    """
-    result = {
-        "plan": None,
-        "thought": None,
-        "action": None,
-        'action_input': None,
-        'final_answer': None,
-        'is_refresh': False,
-        'retry': False
-    }
-    
-    # 1. 提取 [PLAN] (新增)
-    plan_match = re.search(get_tag_regex(*Tags.plan_tag), response, re.DOTALL)
-    if plan_match:
-        result['plan'] = plan_match.group(1).strip()
+        state.plan = cls._get_tag_content(response, Tags.PLAN)
+        state.thought = cls._get_tag_content(response, Tags.THOUGHT)
+        state.final_answer = cls._get_tag_content(response, Tags.ANSWER)
+        state.action_name = cls._get_tag_content(response, Tags.ACTION)
 
-    # 2. 提取 [ANSWER]
-    answer_match = re.search(get_tag_regex(*Tags.answer_tag), response, re.DOTALL)
-    if answer_match:
-        result['final_answer'] = answer_match.group(1).strip()
+        if state.action_name == "[REFRESH]":
+            state.is_refresh = True
+            return state
 
-    # 3. 提取 [THOUGHT]
-    thought_match = re.search(get_tag_regex(*Tags.thought_tag), response, re.DOTALL)
-    if thought_match:
-        result['thought'] = thought_match.group(1).strip()
-
-    # 4. 提取 [ACTION]
-    action_match = re.search(get_tag_regex(*Tags.action_tag), response, re.DOTALL)
-    if action_match:
-        result['action'] = action_match.group(1).strip()
-        
-        if '[REFRESH]' in result['action']:
-            result['is_refresh'] = True
-            return result
-
-        # 5. 提取 [ARGS]
-        args_match = re.search(get_tag_regex(*Tags.args_tag), response, re.DOTALL)
-        if args_match:
-            raw_input = args_match.group(1).strip()
-            raw_input = re.sub(r'^```\w*\s*', '', raw_input)
-            raw_input = re.sub(r'\s*```$', '', raw_input)
+        args_text = cls._get_tag_content(response, Tags.ARGS)
+        if args_text:
+            # 清理 Markdown 代码块符号
+            clean_json = re.sub(r'^```\w*\s*|\s*```$', '', args_text.strip())
             try:
-                result['action_input'] = json.loads(raw_input)
+                state.action_args = json.loads(clean_json)
             except json.JSONDecodeError:
-                result['action_input'] = None
-                result['retry'] = True
+                state.error = "Invalid JSON in arguments"
+        return state
 
-    return result
+
+class ToolManager:
+    def __init__(self):
+        self.tools = {}
+        self.reload()
+
+    def reload(self):
+        importlib.reload(tools)
+        self.tools = {
+            name: {'func': obj, 'desc': (obj.__doc__ or "No description").strip()}
+            for name, obj in inspect.getmembers(tools) if inspect.isfunction(obj)
+        }
+
+    def get_descriptions(self) -> str:
+        return "\n".join([f"- {n}: {d['desc']}" for n, d in self.tools.items()])
+
+    def execute(self, name, args):
+        if name not in self.tools:
+            return f"[ERROR] Tool '{name}' not found"
+        try:
+            return str(self.tools[name]['func'](**args))
+        except Exception as e:
+            return f"Error executing {name}: {str(e)}"
+
+
+class LogManager:
+    def __init__(self, config):
+        self.config = config
+        self.log_file = self.init_log()
+
+    def init_log(self, path=None):
+        if path is None:
+            os.makedirs(self.config.LOG_DIR, exist_ok=True)
+            ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            path = os.path.join(self.config.LOG_DIR, f'chat_{ts}.md')
+            with open(path, 'w', encoding='utf-8') as f:
+                f.write(f'# Session {ts}\n\n')
+        else:
+            ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            with open(path, 'a', encoding='utf-8') as f:
+                f.write(f'\n\n# Session {ts}\n\n')
+        return path
+
+    def log(self, role: str, content: str):
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        log_entry = ""
+        if role == "User":
+            log_entry = f"\n\n## 👤 User ({timestamp})\n\n{content}\n"
+        elif role == "Agent":
+            log_entry = f"\n\n### 🤖 Agent ({timestamp})\n\n```xml\n{content}\n```\n"
+        elif role == "System":  # 通常是 Observation
+            log_entry = f"\n\n> 🛠️ **System/Observation** ({timestamp})\n\n```\n{content}\n```\n"
+
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(log_entry)
+        except Exception as e:
+            print(f"[Log Error] Could not write to log file: {e}")

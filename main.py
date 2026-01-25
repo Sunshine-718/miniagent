@@ -1,0 +1,86 @@
+from config import settings
+from utils import ToolManager, Parser
+from agent import ReactAgent
+from interface import ConsoleUI
+from states import Tags
+from pathlib import Path
+
+
+def main():
+    settings.validate()
+
+    # 依赖注入
+    tools = ToolManager()
+    agent = ReactAgent(tools)
+    ui = ConsoleUI()
+
+    ui.rule("ReAct Agent Started")
+
+    while True:
+        try:
+            ui.rule("New Round")
+            user_input = ui.input()
+
+            if user_input.lower() in ['quit', 'exit']:
+                break
+            if user_input.lower() == 'reset':
+                agent.reset()
+                ui.console.print("[yellow]Memory Cleared[/yellow]")
+                continue
+            elif user_input.lower() == 'reload':
+                ui.console.print("[yellow]Reloading History[/yellow]")
+                path = Path(f'./logs/{input("请输入历史记录文件名 chat_**.md").strip()}')
+                if path.exists():
+                    agent.reload_history(path)
+                    ui.console.print("[yellow]History Reloded[/yellow]")
+                    continue
+                else:
+                    ui.console.print("[Red]History not exists[/Red]")
+                    continue
+
+            # 处理一轮对话中的多次 ReAct 循环
+            current_prompt = user_input
+            MAX_STEPS = 100
+
+            for step in range(MAX_STEPS):
+                ui.console.print(f"[dim]Step {step + 1}[/dim]")
+
+                # 1. Agent 思考并生成流
+                response_stream = agent.step_stream(current_prompt)
+                full_response = ui.render_stream_loop(response_stream)
+
+                # 2. 解析响应
+                state = Parser.parse_response(full_response)
+
+                # 3. 各种分支处理
+                if state.final_answer:
+                    break
+
+                if state.is_refresh:
+                    tools.reload()
+                    agent.reset()  # 刷新后通常需要更新 System Prompt
+                    current_prompt = "Observation: Tools reloaded successfully."
+                    continue
+
+                if state.error:
+                    ui.print_error(state.error)
+                    current_prompt = f"Observation: Error: {state.error}. Please reflect and retry."
+                    continue
+
+                if state.has_action:
+                    result = tools.execute(state.action_name, state.action_args or {})
+                    ui.print_observation(result)
+                    agent.add_observation(result)  # 写入历史
+                    # 下一轮循环自动开始，无需修改 prompt，因为历史记录里已经有了 Observation
+                    current_prompt = "Observation: (See history for result)"
+
+                if not state.has_action and not state.final_answer:
+                    current_prompt = f"System Hint: You stopped without an Action or Answer. Please continue properly using {Tags.THOUGHT[0]} tags."
+
+        except KeyboardInterrupt:
+            ui.console.print("\n[yellow]Paused. Type 'quit' to exit or Enter to continue.[/yellow]")
+            continue
+
+
+if __name__ == "__main__":
+    main()
