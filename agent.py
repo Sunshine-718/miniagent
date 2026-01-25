@@ -6,7 +6,7 @@ import re
 import json
 from openai import OpenAI, BadRequestError
 import inspect
-import time
+import datetime
 import importlib
 import config  # 导入配置模块
 
@@ -99,7 +99,29 @@ class ReactAgent:
         self.tools = {}
         self.token_limit = 100000
         self.retain_recent = 4
+        self.log_dir = 'logs'
+        os.makedirs(self.log_dir, exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.log_file = os.path.join(self.log_dir, f'chat_{timestamp}.md')
+        with open(self.log_file, 'w', encoding='utf-8') as f:
+            f.write(f'# Chat Session: {timestamp}\n\n')
         self.clear_history()
+    
+    def append_log(self, role: str, text: str):
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+        log_entry = ""
+        if role == "User":
+            log_entry = f"\n\n## 👤 User ({timestamp})\n\n{text}\n"
+        elif role == "Agent":
+            log_entry = f"\n\n### 🤖 Agent ({timestamp})\n\n```xml\n{text}\n```\n"
+        elif role == "System": # 通常是 Observation
+            log_entry = f"\n\n> 🛠️ **System/Observation** ({timestamp})\n\n```\n{text}\n```\n"
+        
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(log_entry)
+        except Exception as e:
+            print(f"[Log Error] Could not write to log file: {e}")
 
     def _estimate_tokens(self, text: str):
         if not text:
@@ -216,30 +238,55 @@ class Server:
         self.agent = agent
 
     def execute(self, prompt):
+        current_prompt = prompt
+        self.agent.append_log("User", prompt)
         for i in range(1000):
-            console.rule(f"[bold white]Step {i + 1}[/bold white]")
+            try:
+                console.rule(f"[bold white]Step {i + 1}[/bold white]")
 
-            response = self._stream_and_render(prompt)
+                response = self._stream_and_render(current_prompt)
+                
+                self.agent.append_log("Agent", response)
 
-            parse_res = parse_agent_response(response)
+                parse_res = parse_agent_response(response)
 
-            # 1. 结束条件：检测到 Final Answer
-            if parse_res['final_answer']:
-                break
-            # 2. 热重载
-            if parse_res['is_refresh']:
-                self._handle_refresh()
-                prompt = "Observation: 工具库重载成功。"
-                continue
-            # 3. 工具调用
-            if parse_res['action']:
-                prompt = self._handle_tool_call(parse_res)
-            # 4. 错误处理
-            elif parse_res['retry']:
-                prompt = self._handle_error(f"JSON format error in {Tags.ARGS_OPEN}.")
-            elif not parse_res['thought']:
-                # 如果连 Thought 都没有，且没有 Answer，说明格式严重错误
-                prompt = self._handle_error(f"Invalid format. Please use {Tags.THOUGHT_OPEN}...{Tags.THOUGHT_CLOSE} tags.")
+                # 1. 结束条件：检测到 Final Answer
+                if parse_res['final_answer']:
+                    break
+                # 2. 热重载
+                if parse_res['is_refresh']:
+                    self._handle_refresh()
+                    prompt = "Observation: 工具库重载成功。"
+                    continue
+                # 3. 工具调用
+                if parse_res['action']:
+                    current_prompt = self._handle_tool_call(parse_res)
+                # 4. 错误处理
+                elif parse_res['retry']:
+                    current_prompt = self._handle_error(f"JSON format error in {Tags.ARGS_OPEN}.")
+                elif not parse_res['thought']:
+                    # 如果连 Thought 都没有，且没有 Answer，说明格式严重错误
+                    current_prompt = self._handle_error(f"Invalid format. Please use {Tags.THOUGHT_OPEN}...{Tags.THOUGHT_CLOSE} tags.")
+            except KeyboardInterrupt:
+                console.print("\n[bold yellow]⏸️  Process Paused by User (Ctrl+C)[/bold yellow]")
+                action = console.input("[bold cyan]Choose Action: (c)ontinue / (i)ntervene / (q)uit task:[/bold cyan] ").strip().lower()
+
+                if action == 'q':
+                    console.print("[bold red]Task Aborted by User.[/bold red]")
+                    break
+                elif action == 'i':
+                    # 允许用户插入新的 Observation 或 System Hint
+                    new_instruction = console.input("[bold green]Enter intervention/hint:[/bold green] ")
+                    # 将用户的干预伪装成 System Hint 强行注入
+                    current_prompt = f"Observation: [User Intervention] {new_instruction}\nSystem Hint: The user paused execution to provide the above correction. Please adapt your plan."
+                    console.print("[bold magenta]Intervention injected into context.[/bold magenta]")
+                    continue
+                else:
+                    console.print("[dim]Resuming...[/dim]")
+                    # 如果刚才被打断的是 _stream_and_render，response 可能不完整
+                    # 这里简单的处理是让 Agent 基于当前历史继续（可能需要重试）
+                    current_prompt = "System Hint: Execution was paused briefly. Please continue."
+                    continue
 
     def _clean_tags(self, text: str) -> str:
         """
@@ -310,10 +357,12 @@ class Server:
 
             if "error" in func_return.lower() or "exception" in func_return.lower():
                 self._print_observation(func_return)
-                return f'Observation: {func_return}\nSystem Hint: Execution failed? If so, please REFLECT on the arguments.'
-            self._print_observation(func_return)
-            return f'Observation: Function return: {func_return}\n'
-
+                result = f'Observation: {func_return}\nSystem Hint: Execution failed? If so, please REFLECT on the arguments.'
+            else:
+                self._print_observation(func_return)
+                result = f'Observation: Function return: {func_return}\n'
+            self.agent.append_log("System", result)
+            return result
         except Exception as e:
             return self._handle_error(f"Tool execution error: {str(e)}")
 
@@ -323,7 +372,9 @@ class Server:
 
     def _handle_error(self, msg) -> str:
         console.print(f"[danger]❌ {msg}[/danger]")
-        return f"Observation: Error: {msg}\nSystem Hint: Previous action failed. Please starts your next {Tags.THOUGHT_OPEN} with 'Reflection:' to analyze the cause."
+        error_msg = f"Observation: Error: {msg}\nSystem Hint: Previous action failed. Please starts your next {Tags.THOUGHT_OPEN} with 'Reflection:' to analyze the cause."
+        self.agent.append_log("System", error_msg)
+        return error_msg
 
     def _print_json_args(self, args):
         args_str = json.dumps(args, indent=2, ensure_ascii=False)
@@ -360,6 +411,6 @@ if __name__ == '__main__':
                 except BadRequestError:
                     agent.clear_history()
                     server.execute(user_input)
-    except KeyboardInterrupt:
+    except (EOFError, KeyboardInterrupt):
         pass
-    console.print("🛑STOPPED🛑", style="red")
+    print("🛑STOPPED🛑")
