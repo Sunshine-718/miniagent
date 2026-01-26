@@ -30,7 +30,7 @@ def main():
                 continue
             elif user_input.lower() == 'reload':
                 ui.console.print("[yellow]Reloading History[/yellow]")
-                path = Path(f'./logs/{input("请输入历史记录文件名 chat_**.md").strip()}')
+                path = Path(f'./logs/{input("请输入历史记录文件名 chat_**.md: ").strip()}')
                 if path.exists():
                     agent.load_history(path)
                     ui.console.print("[yellow]History Reloded[/yellow]")

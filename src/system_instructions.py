@@ -7,6 +7,9 @@ REACT_SYSTEM_PROMPT = f"""
 工具文件结构：
 {{tool_structure}}
 
+工具描述：
+{{tool_descriptions}}
+
 ---
 
 ### 记忆机制

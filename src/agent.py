@@ -2,7 +2,7 @@ from openai import OpenAI
 from src.config import settings
 from src.system_instructions import REACT_SYSTEM_PROMPT
 from src.utils import LogManager
-
+from copy import deepcopy
 
 class ReactAgent:
     def __init__(self, tool_manager):
@@ -48,7 +48,7 @@ class ReactAgent:
         structure = self.tool_manager.get_tools_structure()
         
         # 3. 替换两个占位符
-        return REACT_SYSTEM_PROMPT.replace('{tool_descriptions}', descriptions)\
+        return deepcopy(REACT_SYSTEM_PROMPT).replace('{tool_descriptions}', descriptions)\
                                   .replace('{tool_structure}', structure)\
                                   .replace('{current_plan}', self.current_plan)
 

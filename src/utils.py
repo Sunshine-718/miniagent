@@ -67,7 +67,6 @@ class Parser:
         return state
                         
 
-
 class ToolManager:
     def __init__(self):
         self.tools = {}
@@ -148,6 +147,8 @@ class LogManager:
             log_entry = f"\n\n> 🛠️ **System/Observation** ({timestamp})\n\n```\n{content}\n```\n"
 
         try:
+            if not os.path.exists(self.config.LOG_DIR):
+                os.mkdir(self.config.LOG_DIR)
             with open(self.log_file, 'a', encoding='utf-8') as f:
                 f.write(log_entry)
         except Exception as e:
