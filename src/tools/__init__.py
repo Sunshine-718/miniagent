@@ -1,5 +1,5 @@
 import os
-import sys  # <--- 新增: 需要用到 sys.modules
+import sys
 import pkgutil
 import importlib
 import inspect
@@ -65,14 +65,34 @@ for entry in os.scandir(package_path):
 print(f"✨ Total tools loaded: {len(__all__)}")
 
 # 清理可能残留的非工具全局变量
-for var_name in list(globals().keys()):
-    if var_name not in __all__ and not var_name.startswith('_') and var_name not in ['has_initialized']:
-        # 检查是否为函数，如果不是函数则可能是残留变量
-        if not callable(globals().get(var_name)):
-            del globals()[var_name]
-        # 如果是函数但不在 __all__ 中，也可能是旧工具残留
-        elif var_name not in __all__ and var_name not in ['print', 'os', 'sys', 'pkgutil', 'importlib', 'inspect']:
-            # 特别清理已知的残留工具名
-            if var_name.endswith('_test') or var_name == 'old_obj' or var_name == 'old_obj_value':
-                del globals()[var_name]
-                print(f"  [清理] 移除残留变量: {var_name}")
+# 获取当前所有全局变量名
+global_names = list(globals().keys())
+
+# 定义需要保留的变量名（内置函数和模块）
+protected_names = [
+    'has_initialized', 'print', 'os', 'sys', 'pkgutil', 'importlib', 'inspect', 
+    '__name__', '__doc__', '__package__', '__loader__', '__spec__', '__file__', '__cached__', '__builtins__',
+    # 🔥 新增保护：防止清理逻辑删除自身使用的变量，避免 NameError
+    'global_names', 'protected_names', 'var_name', 'obj', 'package_path', 'current_package_name'
+]
+
+for var_name in global_names:
+    if var_name.startswith('_'):
+        continue
+        
+    if var_name in protected_names:
+        continue
+        
+    if var_name in __all__:
+        continue
+        
+    # 检查是否为函数
+    obj = globals().get(var_name)
+    if callable(obj):
+        # 如果是函数且不在 __all__ 中，删除它（旧工具残留）
+        del globals()[var_name]
+        # print(f"  [清理] 移除残留函数: {var_name}")
+    else:
+        # 如果不是函数，也删除（可能是其他残留变量）
+        del globals()[var_name]
+        # print(f"  [清理] 移除残留变量: {var_name}")

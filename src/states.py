@@ -2,16 +2,6 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Any
 
 
-class Tags:
-    PLAN = "<PLAN>"
-    THOUGHT = "<THOUGHT>"
-    ACTION = "<ACTION>"
-    ARGS = "<ARGS>"
-    ANSWER = "<ANSWER>"
-
-    ALL = [PLAN, THOUGHT, ACTION, ARGS, ANSWER]
-
-
 @dataclass
 class AgentState:
     plan: Optional[str] = None

@@ -1,8 +1,9 @@
 from openai import OpenAI
 from src.config import settings
-from src.system_instructions import REACT_SYSTEM_PROMPT
 from src.utils import LogManager
 from copy import deepcopy
+import src
+import importlib
 
 class ReactAgent:
     def __init__(self, tool_manager):
@@ -41,13 +42,10 @@ class ReactAgent:
             self.history[0]['content'] = self._build_system_prompt()
 
     def _build_system_prompt(self):
-        # 1. 获取工具描述
+        importlib.reload(src)
+        REACT_SYSTEM_PROMPT = src.sys_prompt
         descriptions = self.tool_manager.get_descriptions()
-        
-        # 2. 获取目录结构 (新增)
         structure = self.tool_manager.get_tools_structure()
-        
-        # 3. 替换两个占位符
         return deepcopy(REACT_SYSTEM_PROMPT).replace('{tool_descriptions}', descriptions)\
                                   .replace('{tool_structure}', structure)\
                                   .replace('{current_plan}', self.current_plan)

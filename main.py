@@ -1,8 +1,5 @@
 from pathlib import Path
-from src.config import settings
-from src.utils import ToolManager, Parser
-from src.agent import ReactAgent
-from src.interface import ConsoleUI
+from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
 
 
 def main():
@@ -14,6 +11,7 @@ def main():
     ui = ConsoleUI()
 
     ui.rule("ReAct Agent Started")
+    paused = ""
 
     while True:
         try:
@@ -40,7 +38,8 @@ def main():
                     continue
 
             # 处理一轮对话中的多次 ReAct 循环
-            current_prompt = user_input
+            current_prompt = paused + user_input
+            paused = ""
             MAX_STEPS = 10000
 
             for step in range(MAX_STEPS):
@@ -86,6 +85,7 @@ def main():
 
         except KeyboardInterrupt:
             ui.console.print("\n[yellow]Paused. Type 'quit' to exit or Enter to continue.[/yellow]")
+            paused = "System Hint: User Interrupted.\n\n"
             continue
 
 
