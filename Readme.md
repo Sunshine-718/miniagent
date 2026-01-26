@@ -179,11 +179,11 @@ miniagent/
     └── tools/               # 工具包根目录
         ├── __init__.py      # 核心：动态递归扫描器
         ├── file_ops/        # 文件工具分类
-        ├── web_ops/         # 网络工具分类
-        ├── system_ops/      # 系统工具分类
-        ├── memory_ops/      # 记忆工具分类
+        ├── math_ops/        # 计算工具分类
         ├── mcp_ops/        # MCP协议工具分类
-        └── math_ops/        # 计算工具分类
+        ├── memory_ops/      # 记忆工具分类
+        ├── system_ops/      # 系统工具分类
+        └── web_ops/         # 网络工具分类
 ```
 
 ## 🔧 开发与扩展
