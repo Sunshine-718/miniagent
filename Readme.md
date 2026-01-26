@@ -6,9 +6,7 @@ miniagent - 从单文件脚本进化为现代化的 AI Agent 框架。它拥有�
 
 ## ✨ 核心特性
 
-🏗️ **模块化架构**：采用 src 包结构，核心逻辑与工具实现完全解耦。
-
-🧩 **即插即用工具库**：工具按功能分类存储（file_ops, web_ops 等），支持递归自动扫描。只需放入 .py 文件，Agent 即可立即获得新能力。
+🧩 **即插即用工具库**：工具按功能分类存储（file_ops, web_ops 等），支持递归自动扫描。只需放入 tools 文件夹，Agent 即可立即获得新能力。
 
 🧠 **长期记忆系统**：内置 JSON 索引的记忆库（memory_ops），支持记忆的分类存储、模糊搜索与自动管理。
 
@@ -16,7 +14,7 @@ miniagent - 从单文件脚本进化为现代化的 AI Agent 框架。它拥有�
 
 🔄 **深度热重载**：支持运行时的"深度刷新"，不仅重载工具列表，还能强制刷新 Python 模块缓存，开发新工具无需重启。
 
-🎨 **现代化 UI**：基于 Rich 库构建的防闪烁流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
+🎨 **现代化 UI**：基于 Rich 库构建的流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
 
 ## 📋 系统架构
 
@@ -43,16 +41,16 @@ miniagent - 从单文件脚本进化为现代化的 AI Agent 框架。它拥有�
 ### 环境要求
 
 - Python 3.8+
-- DeepSeek API Key
-- Jina API Token (用于联网搜索)
-- QQ邮箱授权码 (可选，用于邮件功能)
+- [DeepSeek API Key](https://platform.deepseek.com/api_keys)
+- [Jina API Token](https://jina.ai/zh-CN/) (用于联网搜索)
+- [QQ邮箱](https://wx.mail.qq.com/)授权码 (可选，用于邮件功能)
 
 ### 安装步骤
 
 1. **克隆项目并安装依赖**
 
 ```bash
-git clone https://github.com/yourusername/miniagent.git
+git clone https://github.com/Sunshine-718/miniagent.git
 cd miniagent
 pip install -r requirements.txt
 ```
@@ -155,9 +153,7 @@ miniagent/
 得益于动态扫描机制，添加工具非常简单：
 
 1. **选择分类**：在 `src/tools/` 下找到合适的文件夹（如 `web_ops`），或者新建一个文件夹。
-
 2. **创建文件**：新建一个 `.py` 文件，例如 `get_btc_price.py`。
-
 3. **编写函数**：
 
 ```python
