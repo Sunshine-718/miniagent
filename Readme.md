@@ -109,45 +109,59 @@ python main.py
 
 ## 🛠️ 工具集概览 (src/tools/)
 
-工具库已按功能分类到不同文件夹：
+工具库已按功能分类到不同文件夹，支持动态热重载：
 
-### 📂 file_ops (文件系统)
+### 🎮 toys (娱乐游戏)
+- `roll_dices` - 掷骰子游戏
+- `flip_coins` - 投硬币游戏  
+- `rock_paper_scissors` - 石头剪刀布游戏
+- `number_guessing_game` - 数字猜谜游戏
+- `draw_cards` - 抽牌游戏（支持扑克、塔罗、UNO牌）
+- `tic_tac_toe_game` - 井字棋游戏
 
-- `create_file` / `read_file` / `delete_file` - 基础操作
-- `edit_file_by_replace` / `edit_file_by_line` - 精准文件编辑 (节省 Token)
-- `check_file_diff` - 修改前差异预览
-- `regex_search_in_file` - 正则搜索
+### 📂 file_ops (文件系统操作)
+- `list_files` / `list_dir` - 列出目录内容
+- `create_file` / `read_file` / `delete_file` - 基础文件操作
+- `edit_file_by_replace` / `edit_file_by_line` - 精准文件编辑（节省Token）
+- `append_to_file` - 在文件特定位置追加内容
+- `regex_search_in_file` - 正则表达式搜索
+- `search_files_by_content` - 按内容搜索文件
 - `rename_file` / `rename_dir` - 文件/文件夹重命名
-- `replace_file` - 原子文件替换 (使用 os.replace)
-- `move_file` - 文件/文件夹移动
+- `batch_rename_files` - 批量文件重命名
+- `move_file` / `copy` - 文件移动和复制
+- `replace_file` - 原子文件替换（使用os.replace）
+- `make_dir` / `delete_dir` - 目录创建和删除
+- `get_file_info` - 获取文件详细信息
+- `compare_files` - 比较两个文件差异
+- `count_file_lines` - 统计文件行数信息
+- `change_file_permissions` - 修改文件权限
 
-### 🌐 web_ops (网络能力)
-
-- `search_jina` - 联网搜索 (SERP)
-- `scrape_web_page` / `read_url_jina` - 网页内容读取与 Markdown 转换
+### 🌐 web_ops (网络操作)
+- `search_jina` - 联网搜索（SERP）
+- `scrape_web_page` / `read_url_jina` - 网页内容读取与Markdown转换
 - `get_weather` - 实时天气查询
-- `send_email_via_qq` - 邮件发送
+- `send_email_via_qq` - 邮件发送（支持附件）
+- `check_deepseek_balance` - 查询DeepSeek API账户余额
 
-### 💻 system_ops (系统控制)
-
-- `run_terminal_command` - 执行 Shell 命令
-- `python_repl` - Python 代码执行沙箱
-- `upload_to_github` - 自动 Git 提交与推送
-- `get_source_code` - Agent 自我内省 (读取自身源码)
+### 💻 system_ops (系统操作)
+- `run_terminal_command` - 执行Shell命令（支持实时输出）
+- `python_repl` - Python代码执行沙箱（变量持续保持）
+- `upload_to_github` - 自动Git提交与推送
+- `get_source_code` - Agent自我内省（读取工具源码）
+- `get_current_time` - 获取当前日期时间
+- `get_os_info` - 获取操作系统信息
 
 ### 🧠 memory_ops (记忆管理)
-
 - `save_memory` - 保存关键信息到长期记忆
 - `search_memory` - 模糊/精确搜索记忆库
 - `get_all_memories` - 记忆库概览
+- `delete_memory` - 删除指定记忆
 
-### 🧮 math_ops (计算)
-
-- `calculator` - 安全的数学表达式计算器
+### 🧮 math_ops (数学计算)
+- `calculator` - 安全的数学表达式计算器（支持科学计算）
 
 ### 🔌 mcp_ops (MCP协议支持)
-
-- `connect_mcp_server` - 连接外部MCP服务器 (支持Stdio协议)
+- `connect_mcp_server` - 连接外部MCP服务器（支持Stdio协议）
 - `list_mcp_tools` - 列出MCP服务器提供的所有工具
 - `call_mcp_tool` - 调用MCP服务器上的特定工具
 
