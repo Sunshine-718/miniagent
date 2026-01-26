@@ -1,6 +1,10 @@
-# miniagent
-
-一个轻量级、模块化、具备自我进化能力的 ReAct（Reasoning + Acting）AI 代理系统。
+<div align="center">
+  <img src="assets/logo.png" alt="miniagent logo" width="200" height="200">
+  
+  # miniagent
+  
+  一个轻量级、模块化、具备自我进化能力的 ReAct（Reasoning + Acting）AI 代理系统。
+</div>
 
 ## ✨ 核心特性
 
