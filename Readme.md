@@ -13,8 +13,6 @@
 
 🧠 **长期记忆系统**：内置 JSON 索引的记忆库（memory_ops），支持记忆的分类存储、模糊搜索与自动管理。
 
-📝 **有状态计划 (Stateful Plan)**：Agent 能够维护当前计划状态，仅在必要时更新计划，大幅节省 Token 消耗并保持上下文连贯。
-
 🔄 **深度热重载**：支持运行时的"深度刷新"，不仅重载工具列表，还能强制刷新 Python 模块缓存，开发新工具无需重启。
 
 🧬 **自我进化能力**：Agent 能够分析自身不足，主动创建新工具、优化现有功能，实现能力的持续增长和系统自我完善。
@@ -176,6 +174,7 @@ miniagent/
     ├── states.py            # 状态定义 (Plan/Thought/Action)
     ├── system_instructions.py # System Prompt 模板
     ├── utils.py             # 通用工具类 (LogManager, ToolManager)
+    ├── mcp_manager.py       # MCP客户端集成
     └── tools/               # 工具包根目录
         ├── __init__.py      # 核心：动态递归扫描器
         ├── file_ops/        # 文件工具分类
