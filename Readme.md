@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logo.png" alt="miniagent logo" width="200" height="200">
+  <img src="assets/logo.jpg" alt="miniagent logo" width="200" height="200">
   
   # miniagent
   
