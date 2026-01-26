@@ -1,5 +1,6 @@
 from pathlib import Path
 from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
+from openai import APIConnectionError
 
 
 def main():
@@ -87,6 +88,9 @@ def main():
             ui.console.print("\n[yellow]Paused. Type 'quit' to exit or Enter to continue.[/yellow]")
             paused = "System Hint: User Interrupted.\n\n"
             continue
+        except APIConnectionError:
+            ui.console.print("\n[Red]无网络连接，正在退出...[/Red]\n")
+            break
 
 
 if __name__ == "__main__":
