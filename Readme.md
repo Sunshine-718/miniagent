@@ -16,6 +16,70 @@
 
 🎨 **现代化 UI**：基于 Rich 库构建的流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
 
+## 🎯 能力展示
+
+### 📁 文件系统操作 (24个工具)
+
+#### 基础文件操作
+- ✅ **创建/读取/删除**：`create_file`, `read_file`, `delete_file`
+- ✅ **追加/替换**：`append_to_file`, `replace_file`
+- ✅ **移动/复制**：`move_file`, `copy`
+- ✅ **重命名**：`rename_file`, `rename_dir`
+
+#### 智能编辑与搜索
+- ✅ **精准编辑**：`edit_file_by_replace` (节省Token), `edit_file_by_line`
+- ✅ **正则搜索**：`regex_search_in_file`
+- ✅ **内容搜索**：`search_files_by_content` (新增)
+- ✅ **批量重命名**：`batch_rename_files` (新增，支持正则表达式)
+
+#### 文件信息与比较
+- ✅ **文件信息**：`get_file_info` (新增，获取详细属性)
+- ✅ **行数统计**：`count_file_lines`
+- ✅ **文件比较**：`compare_files` (新增)
+- ✅ **差异检查**：`check_file_diff` (安全预览)
+
+#### 目录管理
+- ✅ **目录操作**：`make_dir`, `list_dir`, `delete_dir`
+- ✅ **权限管理**：`change_file_permissions` (新增，Linux/Unix)
+
+### 🌐 网络与信息获取
+- ✅ **联网搜索**：`search_jina` (SERP)
+- ✅ **网页抓取**：`scrape_web_page`, `read_url_jina` (Markdown转换)
+- ✅ **实时天气**：`get_weather`
+- ✅ **邮件发送**：`send_email_via_qq`
+
+### 💻 系统控制与开发
+- ✅ **终端命令**：`run_terminal_command`
+- ✅ **Python执行**：`python_repl` (代码沙箱)
+- ✅ **Git操作**：`upload_to_github` (自动提交推送)
+- ✅ **自我内省**：`get_source_code` (读取自身源码)
+
+### 🧠 记忆与认知
+- ✅ **记忆存储**：`save_memory` (长期记忆)
+- ✅ **记忆搜索**：`search_memory` (模糊/精确)
+- ✅ **记忆管理**：`get_all_memories` (记忆库概览)
+
+### 🧮 计算与逻辑
+- ✅ **数学计算**：`calculator` (安全表达式计算)
+
+### 🔄 自我进化实例
+
+**示例：文件操作能力的自我扩展**
+```
+1. 识别需求：用户需要批量文件操作功能
+2. 分析现状：现有工具库缺少批量处理能力
+3. 创建工具：开发 batch_rename_files.py
+4. 测试验证：在storage目录创建原型并测试
+5. 集成部署：添加到正式工具库并[REFRESH]
+6. 能力增长：系统获得新的批量重命名能力
+```
+
+**实际应用场景**
+- 🔍 **项目代码分析**：搜索特定代码模式，统计行数
+- 📝 **文档批量处理**：重命名文档，替换内容
+- 🗂️ **文件系统整理**：批量整理文件，权限管理
+- 🔧 **开发辅助**：代码重构，配置文件管理
+
 ## 📋 系统架构
 
 ```plaintext
