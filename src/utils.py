@@ -3,8 +3,8 @@ import re
 import json
 import importlib
 import inspect
-from states import AgentState, Tags
-import tools
+from src.states import AgentState
+from src import tools
 import datetime
 
 
@@ -17,7 +17,7 @@ class Parser:
 
         # 一次性提取所有 "## Title" -> "Content" 的键值对
         pattern = re.compile(
-            r'(?m)^##\s*(?P<header>.+?)\s*$(?P<content>[\s\S]*?)(?=^##|\Z)'
+            r'(?m)^##\s*(?P<header>.+?)\s*$(?P<content>[\s\S]*?)(?=^##\s(?![#])|\Z)'
         )
 
         sections = {
@@ -63,14 +63,19 @@ class Parser:
 class ToolManager:
     def __init__(self):
         self.tools = {}
-        self.reload()
+        self.refresh_list()
 
-    def reload(self):
-        importlib.reload(tools)
+    def refresh_list(self):
+        """只更新工具列表，不重载模块文件"""
         self.tools = {
             name: {'func': obj, 'desc': (obj.__doc__ or "No description").strip()}
             for name, obj in inspect.getmembers(tools) if inspect.isfunction(obj)
         }
+    
+    def reload(self):
+        """强制从磁盘重载代码"""
+        importlib.reload(tools)
+        self.refresh_list()
 
     def get_descriptions(self) -> str:
         return "\n".join([f"- {n}: {d['desc']}" for n, d in self.tools.items()])

@@ -1,7 +1,7 @@
 from openai import OpenAI
-from config import settings
-from system_instructions import REACT_SYSTEM_PROMPT
-from utils import LogManager
+from src.config import settings
+from src.system_instructions import REACT_SYSTEM_PROMPT
+from src.utils import LogManager
 
 
 class ReactAgent:
@@ -12,10 +12,11 @@ class ReactAgent:
         self.history = []
         self.reset()
 
-    def reset(self):
+    def reset(self, reload_tools=True):
         self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
         self.logger.init_log()
-        self.reload_toolset()
+        if reload_tools:
+            self.reload_toolset()
 
     def reload_toolset(self):
         self.tool_manager.reload()

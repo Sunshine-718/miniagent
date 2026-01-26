@@ -1,8 +1,8 @@
 from pathlib import Path
-from config import settings
-from utils import ToolManager, Parser
-from agent import ReactAgent
-from interface import ConsoleUI
+from src.config import settings
+from src.utils import ToolManager, Parser
+from src.agent import ReactAgent
+from src.interface import ConsoleUI
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
                 ui.console.print("[yellow]Reloading History[/yellow]")
                 path = Path(f'./logs/{input("请输入历史记录文件名 chat_**.md").strip()}')
                 if path.exists():
-                    agent.reload_history(path)
+                    agent.load_history(path)
                     ui.console.print("[yellow]History Reloded[/yellow]")
                     continue
                 else:

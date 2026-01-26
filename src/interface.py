@@ -4,8 +4,6 @@ from rich.markdown import Markdown
 from rich.live import Live
 from rich.theme import Theme
 from rich.syntax import Syntax
-from states import AgentState
-import json
 import re
 
 
@@ -43,7 +41,7 @@ class ConsoleUI:
                 panels = []
                 
                 def get_section(name):
-                    pattern = f"##\\s*{name}\\s*(.*?)(?=##|$)"
+                    pattern = f"##\\s*{name}\\s*(.*?)(?=\n##\\s|$)"
                     match = re.search(pattern, full_text, re.DOTALL | re.IGNORECASE)
                     return match.group(1) .strip() if match else None
                 
