@@ -1,9 +1,10 @@
 <div align="center">
   <img src="assets/logo.jpg" alt="miniagent logo" width="200" height="200">
-  
-  # miniagent
-  
+
+# miniagent
+
   一个轻量级、模块化、具备自我进化能力的 ReAct（Reasoning + Acting）AI 代理系统。
+
 </div>
 
 ## ✨ 核心特性
@@ -20,55 +21,12 @@
 
 🎨 **现代化 UI**：基于 Rich 库构建的流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
 
-## 🎯 能力展示
-
-### 📁 文件系统操作 (24个工具)
-
-#### 基础文件操作
-- ✅ **创建/读取/删除**：`create_file`, `read_file`, `delete_file`
-- ✅ **追加/替换**：`append_to_file`, `replace_file`
-- ✅ **移动/复制**：`move_file`, `copy`
-- ✅ **重命名**：`rename_file`, `rename_dir`
-
-#### 智能编辑与搜索
-- ✅ **精准编辑**：`edit_file_by_replace` (节省Token), `edit_file_by_line`
-- ✅ **正则搜索**：`regex_search_in_file`
-- ✅ **内容搜索**：`search_files_by_content` (新增)
-- ✅ **批量重命名**：`batch_rename_files` (新增，支持正则表达式)
-
-#### 文件信息与比较
-- ✅ **文件信息**：`get_file_info` (新增，获取详细属性)
-- ✅ **行数统计**：`count_file_lines`
-- ✅ **文件比较**：`compare_files` (新增)
-- ✅ **差异检查**：`check_file_diff` (安全预览)
-
-#### 目录管理
-- ✅ **目录操作**：`make_dir`, `list_dir`, `delete_dir`
-- ✅ **权限管理**：`change_file_permissions` (新增，Linux/Unix)
-
-### 🌐 网络与信息获取
-- ✅ **联网搜索**：`search_jina` (SERP)
-- ✅ **网页抓取**：`scrape_web_page`, `read_url_jina` (Markdown转换)
-- ✅ **实时天气**：`get_weather`
-- ✅ **邮件发送**：`send_email_via_qq`
-
-### 💻 系统控制与开发
-- ✅ **终端命令**：`run_terminal_command`
-- ✅ **Python执行**：`python_repl` (代码沙箱)
-- ✅ **Git操作**：`upload_to_github` (自动提交推送)
-- ✅ **自我内省**：`get_source_code` (读取自身源码)
-
-### 🧠 记忆与认知
-- ✅ **记忆存储**：`save_memory` (长期记忆)
-- ✅ **记忆搜索**：`search_memory` (模糊/精确)
-- ✅ **记忆管理**：`get_all_memories` (记忆库概览)
-
-### 🧮 计算与逻辑
-- ✅ **数学计算**：`calculator` (安全表达式计算)
+🔌 **MCP协议集成**：内置完整的MCP客户端，支持连接外部MCP服务器，实现工具能力的无限扩展。
 
 ### 🔄 自我进化实例
 
 **示例：文件操作能力的自我扩展**
+
 ```
 1. 识别需求：用户需要批量文件操作功能
 2. 分析现状：现有工具库缺少批量处理能力
@@ -79,6 +37,7 @@
 ```
 
 **实际应用场景**
+
 - 🔍 **项目代码分析**：搜索特定代码模式，统计行数
 - 📝 **文档批量处理**：重命名文档，替换内容
 - 🗂️ **文件系统整理**：批量整理文件，权限管理
@@ -188,6 +147,18 @@ python main.py
 
 - `calculator` - 安全的数学表达式计算器
 
+### 🔌 mcp_ops (MCP协议支持)
+
+- `connect_mcp_server` - 连接外部MCP服务器 (支持Stdio协议)
+- `list_mcp_tools` - 列出MCP服务器提供的所有工具
+- `call_mcp_tool` - 调用MCP服务器上的特定工具
+
+**MCP (Model Context Protocol) 支持**：miniagent 内置了完整的MCP客户端，可以连接和调用任何符合MCP标准的服务器。这使得系统能够：
+
+- 扩展外部工具能力，无需修改核心代码
+- 连接数据库、API服务、文件系统等外部资源
+- 实现模块化的工具生态系统
+
 ## 📁 项目结构
 
 ```plaintext
@@ -211,6 +182,7 @@ miniagent/
         ├── web_ops/         # 网络工具分类
         ├── system_ops/      # 系统工具分类
         ├── memory_ops/      # 记忆工具分类
+        ├── mcp_ops/        # MCP协议工具分类
         └── math_ops/        # 计算工具分类
 ```
 
