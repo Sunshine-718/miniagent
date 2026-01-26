@@ -10,10 +10,12 @@ class ReactAgent:
         self.tool_manager = tool_manager
         self.logger = LogManager(settings)
         self.history = []
-        self.reset()
+        self.current_plan = "暂无计划 (No Plan Yet)"
+        self.reset(False)
 
     def reset(self, reload_tools=True):
         self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
+        self.current_plan = "暂无计划 (No Plan Yet)"
         self.logger.init_log()
         if reload_tools:
             self.reload_toolset()
@@ -32,9 +34,23 @@ class ReactAgent:
         lines = ''.join(lines)
         self.history.append({'role': 'user', 'content': f'以下是对话记录：\n{str(lines)}'})
         self.logger.init_log(history_path)
+    
+    def update_plan(self, new_plan: str):
+        self.current_plan = new_plan
+        if self.history and self.history[0]['role'] == 'system':
+            self.history[0]['content'] = self._build_system_prompt()
 
     def _build_system_prompt(self):
-        return REACT_SYSTEM_PROMPT.replace('{tool_descriptions}', self.tool_manager.get_descriptions())
+        # 1. 获取工具描述
+        descriptions = self.tool_manager.get_descriptions()
+        
+        # 2. 获取目录结构 (新增)
+        structure = self.tool_manager.get_tools_structure()
+        
+        # 3. 替换两个占位符
+        return REACT_SYSTEM_PROMPT.replace('{tool_descriptions}', descriptions)\
+                                  .replace('{tool_structure}', structure)\
+                                  .replace('{current_plan}', self.current_plan)
 
     def _compress_history(self):
         total_len = sum(len(m['content']) for m in self.history) // 3

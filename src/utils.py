@@ -15,9 +15,9 @@ class Parser:
 
         text = text.replace('\r\n', '\n')
 
-        # 一次性提取所有 "## Title" -> "Content" 的键值对
+        # 一次性提取所有 "@@@ Title" -> "Content" 的键值对
         pattern = re.compile(
-            r'(?m)^##\s*(?P<header>.+?)\s*$(?P<content>[\s\S]*?)(?=^##\s(?![#])|\Z)'
+            r'(?m)^@@@\s*(?P<header>.+?)\s*$(?P<content>[\s\S]*?)(?=^@@@\s|\Z)'
         )
 
         sections = {
@@ -37,27 +37,35 @@ class Parser:
 
         args_raw = sections.get('args')
         if args_raw and state.action_name:
-            code_match = re.search(r'```(?:json|python)?\s*(.*?)```', args_raw, re.DOTALL)
-            if code_match:
-                content = code_match.group(1).strip()
-                if state.action_name == "python_repl":
-                    state.action_args = {"code": content}
+            content = args_raw.strip()
+            if state.action_name == "python_repl":
+                match = re.search(r'~~~\s*(?:python)?\s*(.*?)~~~', content, re.DOTALL)
+                if match:
+                    state.action_args = {"code": match.group(1).strip()}
                 else:
-                    try:
-                        state.action_args = json.loads(content)
-                    except json.JSONDecodeError:
-                        state.error = "Args JSON 解析失败"
+                    clean_code = content.strip()
+                    
+                    if clean_code.startswith("~~~"):
+                        clean_code = clean_code[3:]
+                    if clean_code.endswith("~~~"):
+                        clean_code = clean_code[:-3]
+                    
+                    clean_code = clean_code.strip()
+
+                    if clean_code.lower().startswith("python"):
+                        clean_code = clean_code[6:].strip()
+                    state.action_args = {'code': clean_code}
             else:
-                if state.action_name == 'python_repl':
-                    state.action_args = {"code": args_raw}
-                elif not args_raw.strip():
+                if not content:
                     state.action_args = {}
                 else:
                     try:
-                        state.action_args = json.loads(args_raw)
-                    except:
-                        state.error = "未找到代码块 (```) 且无法解析JSON"
+                        state.action_args = json.loads(content)
+                    except Exception as e:
+                        state.error = f"Args Parse Failed: {str(e)}"
+                    
         return state
+                        
 
 
 class ToolManager:
@@ -79,6 +87,27 @@ class ToolManager:
 
     def get_descriptions(self) -> str:
         return "\n".join([f"- {n}: {d['desc']}" for n, d in self.tools.items()])
+    
+    def get_tools_structure(self):
+        base_path = os.path.join(os.path.dirname(__file__), 'tools')
+        tree_str = 'src/tools/\n'
+
+        for root, dirs, files in os.walk(base_path):
+            if "__pycache__" in dirs:
+                dirs.remove("__pycache__")
+            
+            level = root.replace(base_path, "").count(os.sep)
+            indent = " " * 4 * (level + 1)
+
+            if root != base_path:
+                folder_name = os.path.basename(root)
+                tree_str += f"{" " * 4 * level}|-- {folder_name}/\n"
+            
+            for f in files:
+                if f.endswith('.py') and f != "__init__.py":
+                    tree_str += f"{indent}|-- {f}\n"
+        return tree_str.strip()
+            
 
     def execute(self, name, args):
         if name not in self.tools:

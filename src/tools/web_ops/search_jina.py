@@ -1,5 +1,5 @@
 import requests
-from src import config
+import os
 
 
 def search_jina(keyword):
@@ -14,7 +14,7 @@ def search_jina(keyword):
     """
     url = f"https://s.jina.ai/?q={keyword}"
     headers = {
-        "Authorization": f"Bearer {config.JINA_API_TOKEN}",
+        "Authorization": f"Bearer {os.getenv('JINA_API_TOKEN')}",
         "X-Respond-With": "no-content"
     }
     response = requests.get(url, headers=headers)

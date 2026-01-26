@@ -1,5 +1,5 @@
 import requests
-from src import config
+import os
 
 
 def check_deepseek_balance():
@@ -16,7 +16,7 @@ def check_deepseek_balance():
     payload = {}
     headers = {
         'Accept': 'application/json',
-        'Authorization': f'Bearer {config.DEEPSEEK_API_KEY}'
+        'Authorization': f'Bearer {os.getenv('DEEPSEEK_API_KEY')}'
     }
 
     response = requests.request("GET", url, headers=headers, data=payload)

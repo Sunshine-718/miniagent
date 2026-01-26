@@ -5,6 +5,7 @@ from rich.live import Live
 from rich.theme import Theme
 from rich.syntax import Syntax
 import re
+import json
 
 
 class ConsoleUI:
@@ -14,7 +15,7 @@ class ConsoleUI:
             "thought": "yellow",
             "tool": "bold blue",
             "error": "bold red"
-        }))
+        }), force_terminal=True)
     
     def input(self, prompt="User: "):
         return self.console.input(f'[bold green]{prompt}[/bold green]')
@@ -34,16 +35,16 @@ class ConsoleUI:
 
         ui_group = Group(Panel("Waiting for response...", style='dim'))
 
-        with Live(ui_group, console=self.console, refresh_per_second=5, vertical_overflow='visible') as live:
+        with Live(ui_group, console=self.console, refresh_per_second=3, vertical_overflow='auto') as live:
             for chunk in generator:
                 full_text += chunk
 
                 panels = []
                 
                 def get_section(name):
-                    pattern = f"##\\s*{name}\\s*(.*?)(?=\n##\\s|$)"
-                    match = re.search(pattern, full_text, re.DOTALL | re.IGNORECASE)
-                    return match.group(1) .strip() if match else None
+                    pattern = f"(?i)@@@\\s*{name}\\s*(.*?)(?=\\n@@@\\s|$)"
+                    matches = list(re.finditer(pattern, full_text, re.DOTALL))
+                    return matches[-1].group(1).strip() if matches else None
                 
                 plan = get_section("Plan")
                 thought = get_section("Thought")
@@ -58,19 +59,34 @@ class ConsoleUI:
                     panels.append(Panel(Markdown(thought), title="🤖 Thinking", border_style="yellow"))
                 
                 if action:
-                    display_args = args if args else "..."
+                    display_content = "..."
 
                     if args:
-                        code_match = re.search(r'```(\w+)?\s*(.*?)```', args, re.DOTALL)
-                        if code_match:
-                            lang = code_match.group(1) or ('python' if 'python' in action.lower() else "json")
-                            code_content = code_match.group(2)
-                            display_args = Syntax(code_content, lang, theme="monokai", word_wrap=True)
+                        stripped = args.strip()
+                        if action == 'python_repl':
+                            match = re.search(r'~~~\s*(?:python)?\s*(.*?)~~~', stripped, re.DOTALL)
+                            if match:
+                                code_content = match.group(1).strip()
+                                display_content = f"```python\n{code_content}\n```"
+                            else:
+                                clean_code = stripped
+                                if clean_code.startswith("~~~"):
+                                    clean_code = clean_code[3:]
+                                if clean_code.endswith("~~~"):
+                                    clean_code = clean_code[:-3]
+                                clean_code = clean_code.strip()
+                                if clean_code.lower().startswith("python"):
+                                    clean_code = clean_code[6:].strip()
+                                display_content = f"```python\n{clean_code}\n```"
                         else:
-                            # 如果还没输完代码块，暂时显示纯文本
-                            pass
+                            try:
+                                parsed_json = json.loads(stripped)
+                                pretty_json = json.dumps(parsed_json, indent=2, ensure_ascii=False)
+                                display_content = f"```json\n{pretty_json}\n```"
+                            except:
+                                display_content = f"```json\n{stripped}\n```"
                     action_panel = Panel(
-                        display_args,
+                        Markdown(display_content),
                         title=f"🛠️ Action: [bold white]{action}[/bold white]",
                         border_style="blue"
                     )

@@ -1,5 +1,5 @@
 import requests
-from src import config
+import os
 
 def read_url_jina(url: str) -> str:
     """
@@ -14,7 +14,7 @@ def read_url_jina(url: str) -> str:
     """
     url = f"https://r.jina.ai/{url}"
     headers = {
-        "Authorization": f"Bearer {config.JINA_API_TOKEN}"
+        "Authorization": f"Bearer {os.getenv('JINA_API_TOKEN')}"
     }
     response = requests.get(url, headers=headers)
     return response.text

@@ -19,6 +19,8 @@ def main():
         try:
             ui.rule("New Round")
             user_input = ui.input()
+            if not user_input:
+                continue
 
             if user_input.lower() in ['quit', 'exit']:
                 break
@@ -39,7 +41,7 @@ def main():
 
             # 处理一轮对话中的多次 ReAct 循环
             current_prompt = user_input
-            MAX_STEPS = 100
+            MAX_STEPS = 10000
 
             for step in range(MAX_STEPS):
                 ui.console.print(f"[dim]Step {step + 1}[/dim]")
@@ -50,6 +52,9 @@ def main():
 
                 # 2. 解析响应
                 state = Parser.parse_response(full_response)
+                
+                if state.plan:
+                    agent.update_plan(state.plan)
 
                 # 3. 各种分支处理
                 if state.final_answer:

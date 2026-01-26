@@ -1,4 +1,5 @@
 import os
+import sys  # <--- 新增: 需要用到 sys.modules
 import pkgutil
 import importlib
 import inspect
@@ -10,10 +11,12 @@ __all__ = []
 # 获取当前包的名称 (例如 "src.tools")
 current_package_name = __package__
 
-# 只有在初次加载时才打印 Log，防止热重载刷屏
+# 标记初始化状态，避免首次启动刷屏，但在 Reload 时允许打印
 if 'has_initialized' not in globals():
     print(f"🔄 Initializing Tools from: {package_path} (Package: {current_package_name})")
     globals()['has_initialized'] = True
+else:
+    print(f"🔄 Reloading Tools... (Detecting changes in {package_path})")
 
 # 1. 扫描子文件夹
 for entry in os.scandir(package_path):
@@ -27,19 +30,30 @@ for entry in os.scandir(package_path):
                 continue
 
             try:
-                # 3. 动态导入
+                # 3. 构造完整包路径
                 full_import_name = f"{current_package_name}.{category_name}.{module_name}"
-                module = importlib.import_module(full_import_name)
 
-                # 4. 提取函数
+                # =========================================================
+                # 🔥 核心修复：强制级联重载 (Deep Reload)
+                # =========================================================
+                if full_import_name in sys.modules:
+                    # 如果模块已经在内存里，说明是热重载，必须强制 reload 子模块
+                    module = importlib.reload(sys.modules[full_import_name])
+                else:
+                    # 如果是第一次加载
+                    module = importlib.import_module(full_import_name)
+                # =========================================================
+
+                # 4. 提取函数并注册
                 for name, obj in inspect.getmembers(module):
                     if inspect.isfunction(obj) and obj.__module__ == full_import_name and not name.startswith('_'):
                         
-                        # 优化冲突检测逻辑：忽略同源模块的覆盖（即忽略热重载）
+                        # 冲突检测（仅在非重载引发的覆盖时警告，减少误报）
                         if name in globals():
-                            old_obj = globals()[name]
-                            if getattr(old_obj, '__module__', '') != obj.__module__:
-                                print(f"  [⚠️ Warning] Tool conflict: '{name}' (from {old_obj.__module__}) is being overwritten by {name} (from {obj.__module__})!")
+                            old_obj_value = globals()[name]
+                            # 只有当模块路径真正不同时才报警
+                            if getattr(old_obj_value, '__module__', '') != obj.__module__:
+                                print(f"  [⚠️ Warning] Conflict: {name} ({old_obj_value.__module__}) -> ({obj.__module__})")
                         
                         # 挂载到当前命名空间
                         globals()[name] = obj
@@ -48,5 +62,17 @@ for entry in os.scandir(package_path):
             except Exception as e:
                 print(f"    ❌ Error loading {category_name}/{module_name}: {e}")
 
-# 同样，只在数量变化时或调试时打印
 print(f"✨ Total tools loaded: {len(__all__)}")
+
+# 清理可能残留的非工具全局变量
+for var_name in list(globals().keys()):
+    if var_name not in __all__ and not var_name.startswith('_') and var_name not in ['has_initialized']:
+        # 检查是否为函数，如果不是函数则可能是残留变量
+        if not callable(globals().get(var_name)):
+            del globals()[var_name]
+        # 如果是函数但不在 __all__ 中，也可能是旧工具残留
+        elif var_name not in __all__ and var_name not in ['print', 'os', 'sys', 'pkgutil', 'importlib', 'inspect']:
+            # 特别清理已知的残留工具名
+            if var_name.endswith('_test') or var_name == 'old_obj' or var_name == 'old_obj_value':
+                del globals()[var_name]
+                print(f"  [清理] 移除残留变量: {var_name}")

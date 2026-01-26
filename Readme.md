@@ -1,215 +1,187 @@
 # miniagent
 
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![DeepSeek](https://img.shields.io/badge/API-DeepSeek-0d6efd)](https://platform.deepseek.com/)
+一个轻量级、模块化、具备自我进化能力的 ReAct（Reasoning + Acting）AI 代理系统。
 
-一个轻量级、功能强大的ReAct（Reasoning + Acting）AI代理系统，具有丰富的工具集和现代化的控制台界面。
+miniagent - 从单文件脚本进化为现代化的 AI Agent 框架。它拥有结构化的记忆、有状态的任务规划以及即插即用的工具系统。
 
-> **miniagent** - 小而强大的AI代理，让复杂任务变得简单
+## ✨ 核心特性
 
----
-## ✨ 特性
+🏗️ **模块化架构**：采用 src 包结构，核心逻辑与工具实现完全解耦。
 
-- 🏗️ **轻量级设计**：核心代码精简，依赖少，启动快速
-- 🤖 **ReAct框架**：基于推理-行动循环的智能代理架构
-- 🛠️ **丰富工具集**：20+内置工具，涵盖文件操作、网络请求、系统管理等
-- 💬 **流式响应**：实时显示AI思考过程和工具调用
-- 🎨 **美观界面**：使用Rich库构建的现代化控制台界面
-- 🔧 **热重载**：支持工具库动态重载，无需重启
-- 📚 **历史管理**：智能历史记录压缩和持久化存储
-- ⚙️ **配置灵活**：环境变量驱动的配置系统
-- 🔌 **扩展性强**：易于添加新工具和功能
+🧩 **即插即用工具库**：工具按功能分类存储（file_ops, web_ops 等），支持递归自动扫描。只需放入 .py 文件，Agent 即可立即获得新能力。
 
----
+🧠 **长期记忆系统**：内置 JSON 索引的记忆库（memory_ops），支持记忆的分类存储、模糊搜索与自动管理。
+
+📝 **有状态计划 (Stateful Plan)**：Agent 能够维护当前计划状态，仅在必要时更新计划，大幅节省 Token 消耗并保持上下文连贯。
+
+🔄 **深度热重载**：支持运行时的"深度刷新"，不仅重载工具列表，还能强制刷新 Python 模块缓存，开发新工具无需重启。
+
+🎨 **现代化 UI**：基于 Rich 库构建的防闪烁流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
 
 ## 📋 系统架构
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────┐
 │                    Console UI (Rich)                        │
+│   [Stream Renderer]  [Stateful Panel]  [Error Handler]      │
 ├─────────────────────────────────────────────────────────────┤
 │                    ReAct Agent Core                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐     │
-│  │   Reasoning │  │   Tool Call │  │  State Management│     │
+│  │  Planner    │◄─│ Context Mgr │─►│  Memory System   │     │
 │  └─────────────┘  └─────────────┘  └──────────────────┘     │
 ├─────────────────────────────────────────────────────────────┤
-│                    Tool Manager                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐     │
-│  │ File Tools  │  │  Web Tools  │  │  System Tools    │  ...│
-│  └─────────────┘  └─────────────┘  └──────────────────┘     │
+│                    Tool Manager (Dynamic)                   │
+│          (Auto-Discovery & Recursive Loading)               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ file_ops │  │ web_ops  │  │ sys_ops  │  │ mem_ops  │ ... │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
 └─────────────────────────────────────────────────────────────┘
 ```
----
+
 ## 🚀 快速开始
 
 ### 环境要求
 
-- [Python 3.8+](https://www.python.org/downloads/)
-- [DeepSeek API密钥](https://platform.deepseek.com/api_keys)
-- [Jina 搜索API](https://jina.ai/zh-CN/) (搜索功能，用API搜索比Agent爬虫搜索节省Token数量)
-- [QQ邮箱授权码](https://wx.mail.qq.com) (邮件功能)
-登录QQ邮箱网页版 -> 设置 -> 账号与安全 -> 安全设置 获得IMAP/SMTP授权码
+- Python 3.8+
+- DeepSeek API Key
+- Jina API Token (用于联网搜索)
+- QQ邮箱授权码 (可选，用于邮件功能)
 
 ### 安装步骤
 
-1. **安装依赖**
+1. **克隆项目并安装依赖**
 
 ```bash
+git clone https://github.com/yourusername/miniagent.git
+cd miniagent
 pip install -r requirements.txt
 ```
 
 2. **配置环境变量**
-   复制 `.env.template` 为 `.env` 并填写您的API密钥：
+
+项目根目录已包含 .env.template，请复制为 .env 并填入密钥：
 
 ```bash
 cp .env.template .env
 ```
 
-编辑 `.env` 文件：
+编辑 .env 文件：
 
-```env
-# DeepSeek API配置
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
+```bash
+# 核心配置
+DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 
-# 可选：Jina AI API（用于网页搜索和读取）
-JINA_API_TOKEN=your_jina_api_token_here
-
-# 可选：QQ邮箱配置（用于发送邮件）
-QQ_EMAIL=your_qq_email@qq.com
-QQ_EMAIL_AUTH_CODE=your_email_auth_code
+# 增强功能配置
+JINA_API_TOKEN=jina_xxxxxxxxxxxx
+QQ_EMAIL=your_email@qq.com
+QQ_EMAIL_AUTH_CODE=your_auth_code
 ```
 
-3. **运行系统**
+3. **启动 Agent**
 
 ```bash
 python main.py
 ```
----
-## 🛠️ 工具集概览
 
-### 文件操作工具
+## 🛠️ 工具集概览 (src/tools/)
 
-- `create_file` / `read_file` / `delete_file` - 文件创建、读取、删除
-- `edit_file_by_replace` / `edit_file_by_line` - 精确文件编辑
-- `check_file_diff` - 文件差异检查
-- `append_to_file` - 文件内容追加
-- `list_files` / `list_dir` - 目录列表
-- `make_dir` / `delete_dir` - 目录操作
+工具库已按功能分类到不同文件夹：
 
-### 系统工具
+### 📂 file_ops (文件系统)
 
-- `run_terminal_command` - 执行终端命令
-- `get_os_info` - 获取系统信息
-- `get_current_time` - 获取当前时间
-- `python_repl` - Python代码执行环境
+- `create_file` / `read_file` / `delete_file` - 基础操作
+- `edit_file_by_replace` / `edit_file_by_line` - 精准文件编辑 (节省 Token)
+- `check_file_diff` - 修改前差异预览
+- `regex_search_in_file` - 正则搜索
+- `rename_file` / `rename_dir` - 文件/文件夹重命名
+- `replace_file` - 原子文件替换 (使用 os.replace)
+- `move_file` - 文件/文件夹移动
 
-### 网络工具
+### 🌐 web_ops (网络能力)
 
-- `scrape_web_page` - 网页爬取（转换为Markdown）
-- `read_url_jina` - 使用Jina AI读取网页
-- `search_jina` - 网络搜索
-- `get_weather_with_temp` - 天气预报查询
-- `send_email_via_qq` - QQ邮箱邮件发送
+- `search_jina` - 联网搜索 (SERP)
+- `scrape_web_page` / `read_url_jina` - 网页内容读取与 Markdown 转换
+- `get_weather` - 实时天气查询
+- `send_email_via_qq` - 邮件发送
 
-### 计算工具
+### 💻 system_ops (系统控制)
 
-- `calculator` - 科学计算器
-- `regex_search_in_file` - 正则表达式搜索
+- `run_terminal_command` - 执行 Shell 命令
+- `python_repl` - Python 代码执行沙箱
+- `upload_to_github` - 自动 Git 提交与推送
+- `get_source_code` - Agent 自我内省 (读取自身源码)
 
-### API工具
+### 🧠 memory_ops (记忆管理)
 
-- `check_deepseek_balance` - DeepSeek API余额查询
+- `save_memory` - 保存关键信息到长期记忆
+- `search_memory` - 模糊/精确搜索记忆库
+- `get_all_memories` - 记忆库概览
 
-### 开发工具
+### 🧮 math_ops (计算)
 
-- `get_source_code` - 查看工具源代码
-- `upload_to_github` - Git上传到GitHub
----
-## 🎮 使用指南
+- `calculator` - 安全的数学表达式计算器
 
-### 基本交互
-
-启动系统后，我可以：
-
-1. 接收用户的问题或指令
-2. 展示我的思考过程（Plan → Thought → Action）
-3. 调用合适的工具完成任务
-4. 提供最终答案
-
-### 系统命令
-
-- `quit` / `exit` - 退出系统
-- `reset` - 重置对话历史
-- `reload` - 重新加载历史记录
-
-### 示例会话
-
-```
-用户: 计算圆的面积，半径为5
-
-[我的思考过程显示]
-Plan: 计算圆面积公式 πr²
-Thought: 使用calculator工具计算
-Action: calculator
-Args: {"expression": "pi * 5 ** 2"}
-Observation: 78.53981633974483
-Answer: 半径为5的圆面积约为78.54
-```
-
-## 环境变量
-所有敏感信息都通过 `.env`管理，确保安全性。
----
 ## 📁 项目结构
 
-```
+```plaintext
 miniagent/
-├── main.py              # 程序入口点
-├── agent.py             # ReAct代理核心逻辑
-├── config.py            # 配置管理
-├── interface.py         # 用户界面（Rich）
-├── tools.py             # 工具函数库（20+工具）
-├── states.py            # 状态管理和标签定义
-├── utils.py             # 工具类和辅助函数
-├── system_instructions.py # 系统提示词
-├── requirements.txt     # Python依赖
-├── .env.template        # 环境变量模板
-├── logs/                # 日志目录
-└── Agent_Storage/       # 代理生成文件存储
+├── main.py                  # 程序入口
+├── requirements.txt         # 依赖列表
+├── .env                     # 环境变量 (不要提交到Git)
+├── logs/                    # 运行日志
+├── memory/                  # [自动生成] 长期记忆存储库 (JSON索引)
+├── storage/                 # [自动生成] Agent 的工作区
+└── src/                     # 源代码包
+    ├── agent.py             # ReAct Agent 核心逻辑 (含状态计划)
+    ├── config.py            # 配置加载器 (兼容对象与模块级变量)
+    ├── interface.py         # Rich UI 渲染层
+    ├── states.py            # 状态定义 (Plan/Thought/Action)
+    ├── system_instructions.py # System Prompt 模板
+    ├── utils.py             # 通用工具类 (LogManager, ToolManager)
+    └── tools/               # 工具包根目录
+        ├── __init__.py      # 核心：动态递归扫描器
+        ├── file_ops/        # 文件工具分类
+        ├── web_ops/         # 网络工具分类
+        ├── system_ops/      # 系统工具分类
+        ├── memory_ops/      # 记忆工具分类
+        └── math_ops/        # 计算工具分类
 ```
----
+
 ## 🔧 开发与扩展
 
-### 添加新工具
+### 如何添加新工具？
 
-1. 在 `tools.py` 中定义新函数
-2. 确保函数有清晰的文档字符串
+得益于动态扫描机制，添加工具非常简单：
 
-### 工具函数模板
+1. **选择分类**：在 `src/tools/` 下找到合适的文件夹（如 `web_ops`），或者新建一个文件夹。
+
+2. **创建文件**：新建一个 `.py` 文件，例如 `get_btc_price.py`。
+
+3. **编写函数**：
 
 ```python
-def your_new_tool(param1: str, param2: int) -> str:
+# src/tools/web_ops/get_btc_price.py
+import requests
+
+def get_btc_price(currency: str = "USD") -> str:
     """
-    工具描述
+    获取比特币当前价格。
     参数:
-        param1: 参数1描述
-        param2: 参数2描述
-    返回:
-        操作结果
-    用法:
-        your_new_tool(param1=<值>, param2=<值>)
+        currency: 货币单位 (USD/CNY)
     """
-    # 工具实现
-    result = do_something(param1, param2)
-    return f"结果: {result}"
+    # 实现逻辑...
+    return "价格信息..."
 ```
 
-### 修改系统提示
+4. **完成！** 无需注册，无需修改配置。 Agent 在下一次启动或触发 `[REFRESH]` 时会自动加载该工具。
 
-编辑 `system_instructions.py` 中的 `REACT_SYSTEM_PROMPT` 来调整我的行为。
----
-## 🙏 致谢
+## 🎮 交互指令
 
-- [DeepSeek](https://www.deepseek.com/) - 提供强大的AI API
-- [Rich](https://github.com/Textualize/rich) - 美丽的终端文本格式化库
-- [ReAct框架](https://react-lm.github.io/) - 推理-行动循环的灵感来源
----
+- `quit` / `exit` - 退出
+- `reset` - 重置当前对话上下文（清空短期记忆）
+- `reload` - 从日志文件回放历史对话
+
+## ⚠️ 免责声明
+
+本系统具有执行系统命令和修改文件的能力。虽然内置了 `check_file_diff` 等安全机制，但在生产环境中使用 `run_terminal_command` 时请务必谨慎。建议在沙箱或受控环境中运行。
