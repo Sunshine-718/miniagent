@@ -240,4 +240,4 @@ def get_btc_price(currency: str = "USD") -> str:
 
 ## ⚠️ 免责声明
 
-本系统具有执行系统命令和修改文件的能力。虽然内置了 `check_file_diff` 等安全机制，但在生产环境中使用 `run_terminal_command` 时请务必谨慎。建议在沙箱或受控环境中运行。
+本系统具有执行系统命令和修改文件的能力。虽然内置了 `修改前备份 `等安全机制，但在生产环境中使用  `run_terminal_command` 时请务必谨慎。建议在沙箱或受控环境中运行。
