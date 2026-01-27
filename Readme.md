@@ -165,6 +165,7 @@ python main.py
 ### 🧮 math_ops (数学计算)
 
 - `calculator` - 安全的数学表达式计算器（支持科学计算）
+- `sympy_tool` - 符号计算工具（支持积分、微分、极限、方程求解、线性代数矩阵运算等）
 
 ### 🔌 mcp_ops (MCP协议支持)
 
