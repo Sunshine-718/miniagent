@@ -3,7 +3,7 @@
 
 # miniagent
 
-  一个轻量级、模块化、具备自我进化能力的 ReAct（Reasoning + Acting）AI 代理系统。
+  一个轻量级、模块化、具备**自我进化**能力的 ReAct（Reasoning + Acting）+ Plan-and-solve  + self-Reflection 的AI 代理系统。
 
 </div>
 
@@ -112,14 +112,16 @@ python main.py
 工具库已按功能分类到不同文件夹，支持动态热重载：
 
 ### 🎮 toys (娱乐游戏)
+
 - `roll_dices` - 掷骰子游戏
-- `flip_coins` - 投硬币游戏  
+- `flip_coins` - 投硬币游戏
 - `rock_paper_scissors` - 石头剪刀布游戏
 - `number_guessing_game` - 数字猜谜游戏
 - `draw_cards` - 抽牌游戏（支持扑克、塔罗、UNO牌）
 - `tic_tac_toe_game` - 井字棋游戏
 
 ### 📂 file_ops (文件系统操作)
+
 - `list_files` / `list_dir` - 列出目录内容
 - `create_file` / `read_file` / `delete_file` - 基础文件操作
 - `edit_file_by_replace` / `edit_file_by_line` - 精准文件编辑（节省Token）
@@ -137,6 +139,7 @@ python main.py
 - `change_file_permissions` - 修改文件权限
 
 ### 🌐 web_ops (网络操作)
+
 - `search_jina` - 联网搜索（SERP）
 - `scrape_web_page` / `read_url_jina` - 网页内容读取与Markdown转换
 - `get_weather` - 实时天气查询
@@ -144,6 +147,7 @@ python main.py
 - `check_deepseek_balance` - 查询DeepSeek API账户余额
 
 ### 💻 system_ops (系统操作)
+
 - `run_terminal_command` - 执行Shell命令（支持实时输出）
 - `python_repl` - Python代码执行沙箱（变量持续保持）
 - `upload_to_github` - 自动Git提交与推送
@@ -152,15 +156,18 @@ python main.py
 - `get_os_info` - 获取操作系统信息
 
 ### 🧠 memory_ops (记忆管理)
+
 - `save_memory` - 保存关键信息到长期记忆
 - `search_memory` - 模糊/精确搜索记忆库
 - `get_all_memories` - 记忆库概览
 - `delete_memory` - 删除指定记忆
 
 ### 🧮 math_ops (数学计算)
+
 - `calculator` - 安全的数学表达式计算器（支持科学计算）
 
 ### 🔌 mcp_ops (MCP协议支持)
+
 - `connect_mcp_server` - 连接外部MCP服务器（支持Stdio协议）
 - `list_mcp_tools` - 列出MCP服务器提供的所有工具
 - `call_mcp_tool` - 调用MCP服务器上的特定工具
