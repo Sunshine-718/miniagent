@@ -10,6 +10,8 @@ class AgentState:
     action_args: Optional[Dict[str, Any]] = None
     final_answer: Optional[str] = None
     is_refresh: bool = False
+    is_quit: bool = False
+    is_clear: bool = False
     error: Optional[str] = None
 
     @property

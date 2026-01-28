@@ -34,6 +34,10 @@ class Parser:
             state.action_name = action_raw.split('\n')[0].strip()
             if state.action_name == "[REFRESH]":
                 state.is_refresh = True
+            elif state.action_name == "[QUIT]":
+                state.is_quit = True
+            elif state.action_name == "[CLEAR]":
+                state.is_clear = True
 
         args_raw = sections.get('args')
         if args_raw and state.action_name:
