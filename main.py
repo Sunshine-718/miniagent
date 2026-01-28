@@ -1,9 +1,11 @@
-from pathlib import Path
-from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
-from openai import APIConnectionError
+from prepare import prepare
 
 
 def main():
+    from pathlib import Path
+    from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
+    from openai import APIConnectionError, AuthenticationError
+    from datetime import datetime
     settings.validate()
 
     # 依赖注入
@@ -17,7 +19,7 @@ def main():
     while True:
         try:
             ui.rule("New Round")
-            user_input = ui.input()
+            user_input = ui.input("Prompt: ")
             if not user_input:
                 continue
 
@@ -41,23 +43,31 @@ def main():
             # 处理一轮对话中的多次 ReAct 循环
             current_prompt = paused + user_input
             paused = ""
-            MAX_STEPS = 10000
-
-            for step in range(MAX_STEPS):
+            step = 0
+            while True:
+                step += 1
                 ui.console.print(f"[dim]Step {step + 1}[/dim]")
 
                 # 1. Agent 思考并生成流
-                response_stream = agent.step_stream(current_prompt)
+                response_stream = agent.step_stream(current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]")
                 full_response = ui.render_stream_loop(response_stream)
 
                 # 2. 解析响应
                 state = Parser.parse_response(full_response)
-                
+
                 if state.plan:
                     agent.update_plan(state.plan)
 
                 # 3. 各种分支处理
                 if state.final_answer:
+                    break
+
+                if state.is_quit:
+                    exit()
+
+                if state.is_clear:
+                    agent.reset()
+                    ui.print_observation("对话记录已清除")
                     break
 
                 if state.is_refresh:
@@ -89,9 +99,13 @@ def main():
             paused = "System Hint: User Interrupted.\n\n"
             continue
         except APIConnectionError:
-            ui.console.print("\n[Red]无网络连接，正在退出...[/Red]\n")
+            ui.print_error("无网络连接，正在退出...")
+            break
+        except AuthenticationError:
+            ui.print_error("API key错误，请检查 .env 文件的 DEEPSEEK_API_KEY 行，正在退出")
             break
 
 
 if __name__ == "__main__":
+    prepare()
     main()
