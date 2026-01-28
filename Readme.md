@@ -15,29 +15,30 @@
 ### 新增功能
 
 1. **一键启动配置引导**
+
    - `main.py` 现已集成 `prepare()` 函数，首次运行自动检测并启动配置向导
    - 用户只需运行 `python main.py` 即可完成从环境配置到启动 Agent 的全过程
-
 2. **智能环境检测**
+
    - 自动检测 `.env` 文件是否存在
    - 缺失配置时自动启动交互式配置向导
    - 配置完成后自动安装所有依赖包
-
 3. **三种配置方式**
+
    - **一键启动**：`python main.py`（推荐）
    - **独立配置**：`python prepare.py`
    - **手动配置**：传统方式，保留灵活性
-
 4. **配置优化**
+
    - 移除了 `DEEPSEEK_BASE_URL` 配置项
    - 简化 `.env` 文件，现在只需配置4个关键项
-
 5. **Prompt 增强**
+
    - 每个 ReAct 步骤现在自动添加 `[CURRENT STEP: {step}]` 标签
    - 每个步骤自动添加 `[CURRENT TIME: {datetime.now()}]` 时间戳
    - 增强调试能力，便于跟踪对话流程和时间线
-
 6. **Agent 控制指令增强**
+
    - 新增 `[QUIT]` 指令：终止 Agent 程序，安全退出
    - 新增 `[CLEAR]` 指令：清除历史对话记录，重置对话状态
    - 完善的特殊指令系统，支持更精细的 Agent 控制
@@ -50,6 +51,7 @@
 - 🤖 配置完成后无缝进入 Agent 交互界面
 - ⏱️ 增强的调试信息，每个步骤都有时间戳和步骤编号
 - 🎮 增强的交互控制，支持忘记历史和退出程序
+- 💰 实时余额查询和告知，随时掌握 API 使用情况
 
 ### 技术改进
 
@@ -57,6 +59,7 @@
 - 改进的 prompt 构造逻辑，确保步骤和时间信息准确传递
 - 更好的对话流程跟踪和调试支持
 - 增强的 Agent 状态管理，支持安全退出和对话重置
+- 集成余额查询工具 (`check_deepseek_balance`)，支持实时监控 API 使用成本
 
 </details>
 
@@ -297,7 +300,7 @@ python main.py
 - `scrape_web_page` / `read_url_jina` - 网页内容读取与Markdown转换
 - `get_weather` - 实时天气查询
 - `send_email_via_qq` - 邮件发送（支持附件）
-- `check_deepseek_balance` - 查询DeepSeek API账户余额
+- `check_deepseek_balance` - 查询DeepSeek API账户余额（实时监控使用成本）
 
 ### 💻 system_ops (系统操作)
 
