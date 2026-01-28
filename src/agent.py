@@ -12,10 +12,12 @@ class ReactAgent:
         self.logger = LogManager(settings)
         self.history = []
         self.current_plan = "暂无计划 (No Plan Yet)"
+        self.est_num_token = 0
         self.reset(False)
 
     def reset(self, reload_tools=True):
         self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
+        self.est_num_token = len(self.history[0]['content']) // 3
         self.current_plan = "暂无计划 (No Plan Yet)"
         self.logger.init_log()
         if reload_tools:
@@ -52,6 +54,7 @@ class ReactAgent:
 
     def _compress_history(self):
         total_len = sum(len(m['content']) for m in self.history) // 3
+        self.est_num_token = total_len
         if total_len < settings.TOKEN_LIMIT:
             return
 

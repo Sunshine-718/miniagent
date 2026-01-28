@@ -19,7 +19,7 @@ def main():
     while True:
         try:
             ui.rule("New Round")
-            user_input = ui.input("Prompt: ")
+            user_input = ui.input("Prompt > ")
             if not user_input:
                 continue
 
@@ -49,7 +49,7 @@ def main():
                 ui.console.print(f"[dim]Step {step + 1}[/dim]")
 
                 # 1. Agent 思考并生成流
-                response_stream = agent.step_stream(current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]")
+                response_stream = agent.step_stream(current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]\n[ESTIMATED NUM TOKEN USED: {agent.est_num_token}]")
                 full_response = ui.render_stream_loop(response_stream)
 
                 # 2. 解析响应
