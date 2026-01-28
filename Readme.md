@@ -3,9 +3,55 @@
 
 # miniagent
 
-  一个轻量级、模块化、具备**自我进化**能力的 ReAct（Reasoning + Acting）+ Plan-and-solve  + self-Reflection 的AI 代理系统。
+  一个轻量级、模块化、具备**自我进化**能力的 ReAct（Reasoning + Acting）+ Plan-and-solve + self-Reflection 的AI 代理系统。
 
 </div>
+
+## 📢 最新更新
+
+<details>
+<summary><strong>🔄 2026-01-28 - 交互式配置引导集成与 Prompt 增强</strong></summary>
+
+### 新增功能
+
+1. **一键启动配置引导**
+   - `main.py` 现已集成 `prepare()` 函数，首次运行自动检测并启动配置向导
+   - 用户只需运行 `python main.py` 即可完成从环境配置到启动 Agent 的全过程
+
+2. **智能环境检测**
+   - 自动检测 `.env` 文件是否存在
+   - 缺失配置时自动启动交互式配置向导
+   - 配置完成后自动安装所有依赖包
+
+3. **三种配置方式**
+   - **一键启动**：`python main.py`（推荐）
+   - **独立配置**：`python prepare.py`
+   - **手动配置**：传统方式，保留灵活性
+
+4. **配置优化**
+   - 移除了 `DEEPSEEK_BASE_URL` 配置项
+   - 简化 `.env` 文件，现在只需配置4个关键项
+
+5. **Prompt 增强**
+   - 每个 ReAct 步骤现在自动添加 `[CURRENT STEP: {step}]` 标签
+   - 每个步骤自动添加 `[CURRENT TIME: {datetime.now()}]` 时间戳
+   - 增强调试能力，便于跟踪对话流程和时间线
+
+### 用户体验提升
+
+- 🎨 基于 Rich 库的现代化交互界面
+- 🔑 逐步引导配置所有必要的 API Key
+- 📦 自动安装依赖，无需手动操作
+- 🤖 配置完成后无缝进入 Agent 交互界面
+- ⏱️ 增强的调试信息，每个步骤都有时间戳和步骤编号
+
+### 技术改进
+
+- 导入 `datetime` 模块支持实时时间戳
+- 改进的 prompt 构造逻辑，确保步骤和时间信息准确传递
+- 更好的对话流程跟踪和调试支持
+
+</details>
 
 ## ✨ 核心特性
 
@@ -134,6 +180,45 @@ miniagent 已成功完成多个实际项目，展示了其强大的多领域能�
 
 ### 安装步骤
 
+#### 方法一：一键启动（推荐）
+
+最简单的启动方式，系统会自动检测并引导您完成首次配置：
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+python main.py
+```
+
+首次运行时，系统将自动：
+
+1. 🔍 检测环境配置状态
+2. 🎨 启动交互式配置向导（如果需要配置）
+3. 🔑 引导您逐步配置所有必要的 API Key
+4. 📝 自动生成 `.env` 配置文件
+5. 📦 自动安装所有依赖包
+6. 🤖 直接进入 Agent 交互界面
+
+#### 方法二：独立配置
+
+如果您希望先单独完成配置，再启动 Agent：
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+python prepare.py
+```
+
+配置完成后，再运行：
+
+```bash
+python main.py
+```
+
+#### 方法三：手动配置
+
+如果您更喜欢完全手动配置，可以按照以下步骤操作：
+
 1. **克隆项目并安装依赖**
 
 ```bash
@@ -155,7 +240,6 @@ cp .env.template .env
 ```bash
 # 核心配置
 DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
-DEEPSEEK_BASE_URL=https://api.deepseek.com
 
 # 增强功能配置
 JINA_API_TOKEN=jina_xxxxxxxxxxxx
@@ -246,6 +330,7 @@ python main.py
 ```plaintext
 miniagent/
 ├── main.py                  # 程序入口
+├── prepare.py               # 交互式环境配置向导
 ├── requirements.txt         # 依赖列表
 ├── .env                     # 环境变量 (不要提交到Git)
 ├── logs/                    # 运行日志
