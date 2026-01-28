@@ -35,7 +35,7 @@ class ConsoleUI:
 
         ui_group = Group(Panel("Waiting for response...", style='dim'))
 
-        with Live(ui_group, console=self.console, refresh_per_second=10, vertical_overflow='auto') as live:
+        with Live(ui_group, console=self.console, refresh_per_second=5, vertical_overflow='auto') as live:
             for chunk in generator:
                 full_text += chunk
 
