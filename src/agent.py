@@ -7,7 +7,7 @@ import importlib
 
 class ReactAgent:
     def __init__(self, tool_manager):
-        self.client = OpenAI(api_key=settings.API_KEY, base_url=settings.BASE_URL)
+        self.client = OpenAI(api_key=settings.API_KEY, base_url=r'https://api.deepseek.com')
         self.tool_manager = tool_manager
         self.logger = LogManager(settings)
         self.history = []

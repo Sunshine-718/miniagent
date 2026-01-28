@@ -6,7 +6,6 @@ load_dotenv(override=True)
 @dataclass
 class Config:
     API_KEY: str = os.getenv('DEEPSEEK_API_KEY')
-    BASE_URL: str = os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
     JINA_TOKEN: str = os.getenv('JINA_API_TOKEN')
     QQ_EMAIL: str = os.getenv('QQ_EMAIL')
     QQ_AUTH: str = os.getenv('QQ_EMAIL_AUTH_CODE')
