@@ -125,14 +125,16 @@ sys_prompt = f"""
 ### 🔎 用户记忆快照
 {search_memory("user_info", True)}
 
-### 💰 当前API余额：{check_deepseek_balance()}，请告知用户。
-### ⌚ 当前时间：{datetime.now()}，和用户首次打招呼时告知大概时间。
-### Deepseek模型的上下文长度是128K，如果快接近时必须提醒用户。
-### 当前所在路径：{os.getcwd()}，当前目录下文件{os.listdir()}
-### 当前日志文件个数：{len(os.listdir('./logs'))}，如果超过20个，请提醒用户。
+### Dashboard: (首次打招呼时告知用户)
+- 💰 当前API余额：{check_deepseek_balance()}，请告知用户。
+- ⌚ 当前时间：{datetime.now()}，和用户首次打招呼时告知大概时间。
+- Deepseek模型的上下文长度是128K，如果快接近时必须提醒用户。
+- 当前所在路径：{os.getcwd()}，当前目录下文件{os.listdir()}
+- 当前日志文件个数：{len(os.listdir('./logs'))}，如果超过20个，请提醒用户。
 
 请基于以上协议开始行动：
 
 请开始你的回答：
+@@@ Plan 或 @@@ Thought 或 @@@ Answer开始
 
 """
