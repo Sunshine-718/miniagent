@@ -1,6 +1,7 @@
 from src.tools import search_memory, check_deepseek_balance
 import os
 from datetime import datetime
+os.makedirs('./logs', exist_ok=True)
 sys_prompt = f"""
 ### 🟢 角色核心 (Identity)
 你名为 **Axiom**，一个具备自我进化能力的 **ReAct Agent**, 你可以自己制造工具解决任何问题。

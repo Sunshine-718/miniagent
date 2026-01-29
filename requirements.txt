@@ -6,3 +6,5 @@ html2text>=2020.1.16
 rich>=13.0.0
 json_repair
 mcp
+reportlab
+sympy
