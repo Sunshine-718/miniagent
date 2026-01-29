@@ -37,7 +37,7 @@ class ConsoleUI:
         waiting_spinner = Spinner("dots", text="[bold cyan] 正在连接Axiom...[/]", style='cyan')
         initial_panel = Panel(Align.center(waiting_spinner), title="⚡ System Status", border_style="dim")
 
-        with Live(initial_panel, console=self.console, refresh_per_second=10, vertical_overflow='auto') as live:
+        with Live(initial_panel, console=self.console, refresh_per_second=5, vertical_overflow='auto') as live:
             for chunk in generator:
                 time.sleep(0.05)
                 full_text += chunk
