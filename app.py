@@ -9,8 +9,6 @@ import asyncio
 
 UPLOAD_DIR = os.path.join(os.getcwd(), "workspace")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-tools = ToolManager()
-agent = ReactAgent(tools)
 
 
 async def setup_wizard():
@@ -122,7 +120,8 @@ async def start():
         await cl.Message(content=f"⚠️ **配置验证失败**: {str(e)}\n\n请检查 `.env` 文件格式，或删除该文件后刷新页面重新配置。", author="System").send()
         return
     try:
-        agent.reset()
+        tools = ToolManager() 
+        agent = ReactAgent(tools)
         cl.user_session.set("agent", agent)
         cl.user_session.set("tools", tools)
     except Exception as e:
