@@ -124,7 +124,6 @@ class ToolManager:
 class LogManager:
     def __init__(self, config):
         self.config = config
-        self.init_log()
 
     def init_log(self, path=None):
         if path is None:

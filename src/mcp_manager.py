@@ -17,15 +17,22 @@ class MCPManager:
             return cls._instance
 
     def __init__(self):
-        if self.initialized:
-            return
-        self.exit_stack = AsyncExitStack()
-        self.session = None
-        self.server_params = None
-        self.loop = asyncio.new_event_loop()
-        self.thread = threading.Thread(target=self._run_loop, daemon=True)
-        self.thread.start()
-        self.initialized = True
+        # 修改点1: 初始化时不立即启动线程，防止干扰 Web Server 启动
+        pass
+
+    def _ensure_loop(self):
+        """Lazy initialization: 只有在需要时才启动后台循环"""
+        with self._lock:
+            if self.initialized:
+                return
+
+            self.exit_stack = AsyncExitStack()
+            self.session = None
+            self.server_params = None
+            self.loop = asyncio.new_event_loop()
+            self.thread = threading.Thread(target=self._run_loop, daemon=True)
+            self.thread.start()
+            self.initialized = True
 
     def _run_loop(self):
         asyncio.set_event_loop(self.loop)
@@ -47,6 +54,7 @@ class MCPManager:
 
     def connect(self, command: str, args: list = None, env: dict = None):
         """同步连接接口"""
+        self._ensure_loop()  # 修改点2: 在操作前确保循环已启动
         if args is None:
             args = []
         future = asyncio.run_coroutine_threadsafe(
@@ -61,6 +69,7 @@ class MCPManager:
         return result.tools
 
     def list_tools(self):
+        self._ensure_loop()  # 修改点3: 确保循环已启动
         future = asyncio.run_coroutine_threadsafe(self._list_tools(), self.loop)
         return future.result()
 
@@ -71,6 +80,7 @@ class MCPManager:
         return result.content
 
     def call_tool(self, name: str, arguments: dict):
+        self._ensure_loop()  # 修改点4: 确保循环已启动
         future = asyncio.run_coroutine_threadsafe(
             self._call_tool(name, arguments), self.loop
         )

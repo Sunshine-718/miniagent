@@ -10,6 +10,57 @@
 ## 📢 最新更新
 
 <details>
+<summary><strong>🌐 2026-01-30 - Web UI 重磅发布：基于 Chainlit 的现代化界面</strong></summary>
+
+### 🎉 重大更新：Web 界面正式上线
+
+1. **完整的 Web UI 体验**
+
+   - 新增 `app.py` 基于 Chainlit 框架构建的现代化 Web 界面
+   - 支持实时流式响应，思考过程可视化展示
+   - 提供预设快捷指令（Starter），一键触发常用功能
+2. **交互式 Web 配置向导**
+
+   - 首次访问自动检测环境配置状态
+   - 基于 Web 的交互式 API Key 配置界面
+   - 自动安装依赖包，无需手动操作命令行
+3. **文件上传与工作区管理**
+
+   - 支持拖拽上传文件到 `workspace/` 目录
+   - Agent 自动感知上传文件并通知用户
+   - 文件操作完全集成到现有工具系统中
+4. **增强的用户体验**
+
+   - 支持操作中断（Cancel）和继续
+   - 工具执行过程可视化展示
+   - 系统通知和错误信息清晰展示
+
+### 🚀 启动方式
+
+现在您可以通过以下方式启动 Web UI：
+
+```bash
+# 启动 Web 界面（默认端口 8000，仅本地访问）
+chainlit run app.py
+
+# 指定端口（仅本地访问）
+chainlit run app.py -p 8080
+
+# 指定特定 IP 地址访问
+chainlit run app.py --host 192.168.1.100 --port 8000
+```
+
+访问 `http://<你设置的 host 地址>:<你设置的端口号>` 即可开始使用！例如：`http://127.0.0.1:8000`
+
+**IP 地址说明：**
+
+- **127.0.0.1 (localhost)**: 仅本机可访问，最安全，用于本地开发测试
+- **局域网 IP (如 192.168.1.100)**: 同一局域网内的设备可访问，用于团队内部共享
+- **公网 IP (如 123.45.67.89)**: 互联网上任何设备都可访问，需要端口映射和网络安全配置
+
+</details>
+
+<details>
 <summary><strong>🚀 2026-01-29 - 综合功能增强与用户体验全面优化</strong></summary>
 
 ### 🐛 Bug修复
@@ -119,28 +170,163 @@
 
 🧬 **自我进化能力**：Agent 能够分析自身不足，主动创建新工具、优化现有功能，实现能力的持续增长和系统自我完善。
 
-🎨 **现代化 UI**：基于 Rich 库构建的流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示。
+🎨 **双界面支持**：
+
+- **命令行界面**：基于 Rich 库构建的流式控制台，支持 Markdown 渲染、代码高亮和实时思考过程展示
+- **🌐 Web 界面**：基于 Chainlit 的现代化 Web UI，支持文件上传、流式响应和可视化操作过程
 
 🔌 **MCP协议集成**：内置完整的MCP客户端，支持连接外部MCP服务器，实现工具能力的无限扩展。
 
 ## 📋 系统架构
 
 ```plaintext
-┌─────────────────────────────────────────────────────────────┐
-│                    Console UI (Rich)                        │
-│   [Stream Renderer]  [Stateful Panel]  [Error Handler]      │
-├─────────────────────────────────────────────────────────────┤
-│                    ReAct Agent Core                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐     │
-│  │  Planner    │◄─│ Context Mgr │─►│  Memory System   │     │
-│  └─────────────┘  └─────────────┘  └──────────────────┘     │
-├─────────────────────────────────────────────────────────────┤
-│                    Tool Manager (Dynamic)                   │
-│          (Auto-Discovery & Recursive Loading)               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │ file_ops │  │ web_ops  │  │ sys_ops  │  │ mem_ops  │ ... │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         双界面支持 (Dual Interface)                      │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐               │
+│  │   Console UI (Rich)     │  │  Web UI (Chainlit)      │               │
+│  │  [Stream Renderer]      │  │  [File Upload]          │               │
+│  │  [Stateful Panel]       │  │  [Stream Response]      │               │
+│  │  [Error Handler]        │  │  [Visual Steps]         │               │
+│  └─────────────────────────┘  └─────────────────────────┘               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                    ReAct Agent Core                                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐                 │
+│  │  Planner    │◄─│ Context Mgr │─►│  Memory System   │                 │
+│  └─────────────┘  └─────────────┘  └──────────────────┘                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                    Tool Manager (Dynamic)                               │
+│          (Auto-Discovery & Recursive Loading)                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐                 │
+│  │ file_ops │  │ web_ops  │  │ sys_ops  │  │ mem_ops  │ ...             │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘                 │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## 🚀 快速开始
+
+### 环境要求
+
+- [Python](https://www.python.org/downloads/) (不兼容Python 3.14)
+- [DeepSeek API Key](https://platform.deepseek.com/api_keys)
+- [Jina API Token](https://jina.ai/zh-CN/) (用于联网搜索)
+- [QQ邮箱](https://wx.mail.qq.com/)授权码 (可选，用于邮件功能)
+
+### 安装步骤
+
+#### 方法一：Web UI 启动（推荐）
+
+体验现代化的 Web 界面，支持文件上传和流式响应：
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+
+# 安装所有依赖
+pip install -r requirements.txt
+
+# 启动 Web 界面（默认端口 8000，仅本地访问）
+chainlit run app.py
+
+# 指定特定 IP 地址访问
+chainlit run app.py --host 192.168.1.100 --port 8000
+```
+
+**IP 地址说明：**
+
+- **127.0.0.1 (localhost)**: 仅本机可访问，最安全，用于本地开发测试
+- **局域网 IP (如 192.168.1.100)**: 同一局域网内的设备可访问，用于团队内部共享
+- **公网 IP (如 123.45.67.89)**: 互联网上任何设备都可访问，需要端口映射和网络安全配置
+
+访问 `http://<你设置的 host 地址>:<你设置的端口号>` 即可开始使用！例如：`http://127.0.0.1:8000`
+
+首次访问时，Web UI 将自动：
+
+1. 🔍 检测环境配置状态
+2. 🎨 启动 Web 交互式配置向导（如果需要配置）
+3. 🔑 引导您逐步配置所有必要的 API Key
+4. 📝 自动生成 `.env` 配置文件
+5. 📦 自动安装所有依赖包
+6. 🌐 直接进入 Web 交互界面
+
+Web UI 特性：
+
+- 🎨 **现代化界面**：基于 Chainlit 的响应式 Web 界面
+- 📁 **文件上传**：支持拖拽上传文件到 workspace 目录
+- 🔄 **流式响应**：实时展示 Agent 的思考过程
+- 🚀 **快捷指令**：预设常用指令，一键触发
+- ⚙️ **Web 配置向导**：首次访问自动引导配置环境
+
+#### 方法二：一键启动（命令行）
+
+使用命令行界面启动，系统会自动检测并引导您完成首次配置：
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+python main.py
+```
+
+首次运行时，系统将自动：
+
+1. 🔍 检测环境配置状态
+2. 🎨 启动交互式配置向导（如果需要配置）
+3. 🔑 引导您逐步配置所有必要的 API Key
+4. 📝 自动生成 `.env` 配置文件
+5. 📦 自动安装所有依赖包
+6. 🤖 直接进入 Agent 交互界面
+
+#### 方法三：独立配置
+
+如果您希望先单独完成配置，再启动 Agent：
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+python prepare.py
+```
+
+配置完成后，再运行：
+
+```bash
+python main.py
+```
+
+#### 方法四：手动配置
+
+如果您更喜欢完全手动配置，可以按照以下步骤操作：
+
+1. **克隆项目并安装依赖**
+
+```bash
+git clone https://github.com/Sunshine-718/miniagent.git
+cd miniagent
+pip install -r requirements.txt
+```
+
+2. **配置环境变量**
+
+项目根目录已包含 .env.template，请复制为 .env 并填入密钥：
+
+```bash
+cp .env.template .env
+```
+
+编辑 .env 文件：
+
+```bash
+# 核心配置
+DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
+
+# 增强功能配置
+JINA_API_TOKEN=jina_xxxxxxxxxxxx
+QQ_EMAIL=your_email@qq.com
+QQ_EMAIL_AUTH_CODE=your_auth_code
+```
+
+3. **启动 Agent**
+
+```bash
+python main.py
 ```
 
 ## 🎯 能力展示示例
@@ -225,90 +411,6 @@ miniagent 已成功完成多个实际项目，展示了其强大的多领域能�
 | **文档生成** | 专业的报告和文档编写能力       |
 | **工具集成** | 新功能的工具化集成能力         |
 
-## 🚀 快速开始
-
-### 环境要求
-
-- Python 3.8+
-- [DeepSeek API Key](https://platform.deepseek.com/api_keys)
-- [Jina API Token](https://jina.ai/zh-CN/) (用于联网搜索)
-- [QQ邮箱](https://wx.mail.qq.com/)授权码 (可选，用于邮件功能)
-
-### 安装步骤
-
-#### 方法一：一键启动（推荐）
-
-最简单的启动方式，系统会自动检测并引导您完成首次配置：
-
-```bash
-git clone https://github.com/Sunshine-718/miniagent.git
-cd miniagent
-python main.py
-```
-
-首次运行时，系统将自动：
-
-1. 🔍 检测环境配置状态
-2. 🎨 启动交互式配置向导（如果需要配置）
-3. 🔑 引导您逐步配置所有必要的 API Key
-4. 📝 自动生成 `.env` 配置文件
-5. 📦 自动安装所有依赖包
-6. 🤖 直接进入 Agent 交互界面
-
-#### 方法二：独立配置
-
-如果您希望先单独完成配置，再启动 Agent：
-
-```bash
-git clone https://github.com/Sunshine-718/miniagent.git
-cd miniagent
-python prepare.py
-```
-
-配置完成后，再运行：
-
-```bash
-python main.py
-```
-
-#### 方法三：手动配置
-
-如果您更喜欢完全手动配置，可以按照以下步骤操作：
-
-1. **克隆项目并安装依赖**
-
-```bash
-git clone https://github.com/Sunshine-718/miniagent.git
-cd miniagent
-pip install -r requirements.txt
-```
-
-2. **配置环境变量**
-
-项目根目录已包含 .env.template，请复制为 .env 并填入密钥：
-
-```bash
-cp .env.template .env
-```
-
-编辑 .env 文件：
-
-```bash
-# 核心配置
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
-
-# 增强功能配置
-JINA_API_TOKEN=jina_xxxxxxxxxxxx
-QQ_EMAIL=your_email@qq.com
-QQ_EMAIL_AUTH_CODE=your_auth_code
-```
-
-3. **启动 Agent**
-
-```bash
-python main.py
-```
-
 ## 🛠️ 工具集概览 (src/tools/)
 
 工具库已按功能分类到不同文件夹，支持动态热重载：
@@ -385,7 +487,8 @@ python main.py
 
 ```plaintext
 miniagent/
-├── main.py                  # 程序入口
+├── main.py                  # 命令行程序入口
+├── app.py                   # 🌐 Web UI 入口 (基于 Chainlit)
 ├── prepare.py               # 交互式环境配置向导
 ├── requirements.txt         # 依赖列表
 ├── .env                     # 环境变量 (不要提交到Git)
@@ -395,7 +498,7 @@ miniagent/
 └── src/                     # 源代码包
     ├── agent.py             # ReAct Agent 核心逻辑 (含状态计划)
     ├── config.py            # 配置加载器 (兼容对象与模块级变量)
-    ├── interface.py         # Rich UI 渲染层
+    ├── interface.py         # Rich UI 渲染层 (命令行界面)
     ├── states.py            # 状态定义 (Plan/Thought/Action)
     ├── system_instructions.py # System Prompt 模板
     ├── utils.py             # 通用工具类 (LogManager, ToolManager)

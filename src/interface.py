@@ -7,7 +7,7 @@ from rich.spinner import Spinner
 from rich.align import Align
 import re
 import json
-import time
+import asyncio
 
 
 class ConsoleUI:
@@ -32,14 +32,13 @@ class ConsoleUI:
     def print_error(self, msg):
         self.console.print(f"[error]❌ {msg}[/error]")
 
-    def render_stream_loop(self, generator):
+    async def render_stream_loop(self, generator):
         full_text = ""
         waiting_spinner = Spinner("dots", text="[bold cyan] 正在连接Axiom...[/]", style='cyan')
         initial_panel = Panel(Align.center(waiting_spinner), title="⚡ System Status", border_style="dim")
 
         with Live(initial_panel, console=self.console, refresh_per_second=5, vertical_overflow='auto') as live:
-            for chunk in generator:
-                time.sleep(0.05)
+            async for chunk in generator:
                 full_text += chunk
 
                 panels = []

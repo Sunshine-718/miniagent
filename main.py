@@ -1,7 +1,8 @@
 from prepare import prepare
+import asyncio
 
 
-def main():
+async def main():
     from pathlib import Path
     from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
     from openai import APIConnectionError, AuthenticationError
@@ -50,7 +51,7 @@ def main():
 
                 # 1. Agent 思考并生成流
                 response_stream = agent.step_stream(current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]\n[ESTIMATED NUM TOKEN USED: {agent.est_num_token}]")
-                full_response = ui.render_stream_loop(response_stream)
+                full_response = await ui.render_stream_loop(response_stream)
 
                 # 2. 解析响应
                 state = Parser.parse_response(full_response)
@@ -108,4 +109,4 @@ def main():
 
 if __name__ == "__main__":
     prepare()
-    main()
+    asyncio.run(main())

@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import AsyncOpenAI
 from src.config import settings
 from src.utils import LogManager
 from copy import deepcopy
@@ -7,7 +7,7 @@ import importlib
 
 class ReactAgent:
     def __init__(self, tool_manager):
-        self.client = OpenAI(api_key=settings.API_KEY, base_url=r'https://api.deepseek.com')
+        self.client = AsyncOpenAI(api_key=settings.API_KEY, base_url=r'https://api.deepseek.com')
         self.tool_manager = tool_manager
         self.logger = LogManager(settings)
         self.history = []
@@ -44,8 +44,9 @@ class ReactAgent:
             self.history[0]['content'] = self._build_system_prompt()
 
     def _build_system_prompt(self):
-        importlib.reload(src)
-        REACT_SYSTEM_PROMPT = src.sys_prompt
+        from src import system_instructions
+        importlib.reload(system_instructions)
+        REACT_SYSTEM_PROMPT = system_instructions.sys_prompt
         descriptions = self.tool_manager.get_descriptions()
         structure = self.tool_manager.get_tools_structure()
         return deepcopy(REACT_SYSTEM_PROMPT).replace('{tool_descriptions}', descriptions)\
@@ -74,18 +75,18 @@ class ReactAgent:
 
         self.logger.log("System", "History compressed.")
 
-    def step_stream(self, user_input):
+    async def step_stream(self, user_input):
         self.history.append({'role': 'user', 'content': user_input})
         self.logger.log("User", user_input)
         self._compress_history()
 
-        response_stream = self.client.chat.completions.create(
+        response_stream = await self.client.chat.completions.create(
             model='deepseek-chat', messages=self.history, stream=True
         )
 
         full_content = ""
 
-        for chunk in response_stream:
+        async for chunk in response_stream:
             text = chunk.choices[0].delta.content
             if text:
                 full_content += text
@@ -93,7 +94,7 @@ class ReactAgent:
 
         self.history.append({'role': 'assistant', 'content': full_content})
         self.logger.log("Agent", full_content)
-        return full_content
+        # return full_content
 
     def add_observation(self, content):
         msg = f'Observation: {content}'

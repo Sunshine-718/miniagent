@@ -1,15 +1,17 @@
 import os
 import json
 from datetime import datetime
+from typing import Optional, List
 from ._utils import load_index, save_index, extract_keywords, categorize_memory, CATEGORIES_DIR
 
 
-def save_memory(key: str, value: str) -> str:
+def save_memory(key: str, value: str, keywords: Optional[List[str]] = None) -> str:
     """
     保存记忆到分类目录并更新索引
     参数:
         key: 字符串，记忆关键词
         value: 字符串，记忆内容
+        keywords: 可选的关键词列表，如果为None则自动从内容中提取
     """
     index = load_index()
     if index is None:
@@ -18,7 +20,13 @@ def save_memory(key: str, value: str) -> str:
     # 1. 确定分类和路径
     category = categorize_memory(key, value)
     timestamp = datetime.now().isoformat()
-    keywords = [key.lower()] + extract_keywords(value)
+    
+    # 2. 确定关键词：如果提供了自定义关键词则使用，否则自动提取
+    if keywords is not None:
+        # 确保key总是包含在关键词中，并去重
+        keywords = list(set([key.lower()] + keywords))
+    else:
+        keywords = [key.lower()] + extract_keywords(value)
 
     memory_filename = f"{key}.json"
     memory_path = os.path.join(CATEGORIES_DIR, category, memory_filename)

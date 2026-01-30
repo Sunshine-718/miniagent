@@ -173,6 +173,7 @@ out/
 .chainlit/
 user_info.txt
 logs/
-Agent_Storage/
 memory/
-storage/
+workspace/
+chainlit.md
+.files

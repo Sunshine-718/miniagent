@@ -8,3 +8,4 @@ json_repair
 mcp
 reportlab
 sympy
+chainlit
