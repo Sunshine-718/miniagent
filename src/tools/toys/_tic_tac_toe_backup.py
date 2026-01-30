@@ -224,7 +224,7 @@ def tic_tac_toe_game(action: str = "start",
         游戏状态字符串
     """
     # 游戏状态文件路径（使用原始文件名保持兼容）
-    state_dir = "workspace/game_states"
+    state_dir = "storage/game_states"
     os.makedirs(state_dir, exist_ok=True)
     state_file = os.path.join(state_dir, f"tic_tac_toe_{game_id}.json")
     

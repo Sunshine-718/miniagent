@@ -37,7 +37,7 @@ def number_guessing_game(action: str = "start", guess: int = None,
         "游戏进行中。范围：1-50，已猜测：1次"
     """
     # 游戏状态文件路径
-    state_dir = "workspace/game_states"
+    state_dir = "storage/game_states"
     os.makedirs(state_dir, exist_ok=True)
     state_file = os.path.join(state_dir, f"number_guessing_{game_id}.json")
     

@@ -89,8 +89,8 @@ async def set_starters():
             message="请帮我看看今天有什么新闻。",
         ),
         cl.Starter(
-            label="查询记忆",
-            message="查询一下你记忆数据库中关于我的信息。",
+            label="帮我发一封邮件",
+            message="帮我发一封邮件",
         ),
         cl.Starter(
             label="查看缓存日志",
