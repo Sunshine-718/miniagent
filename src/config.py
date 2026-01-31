@@ -10,13 +10,7 @@ class Config:
     QQ_EMAIL: str = os.getenv('QQ_EMAIL')
     QQ_AUTH: str = os.getenv('QQ_EMAIL_AUTH_CODE')
 
-    TOKEN_LIMIT: int = 100000
-    RETAIN_RECENT: int = 10
-    LOG_DIR: str = "logs"
-
-    def validate(self):
-        missing = [k for k, v in self.__dict__.items() if v is None]
-        if missing:
-            raise ValueError(f'Missing config: {', '.join(missing)}')
+    TOKEN_LIMIT: int = 1000000
+    RETAIN_RECENT: int = 50
     
 settings = Config()

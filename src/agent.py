@@ -1,23 +1,24 @@
 from openai import AsyncOpenAI
 from src.config import settings
-from src.utils import LogManager
+from src.utils import LogManager, Context
 from copy import deepcopy
-import src
 import importlib
+import os
+
 
 class ReactAgent:
     def __init__(self, tool_manager):
-        self.client = AsyncOpenAI(api_key=settings.API_KEY, base_url=r'https://api.deepseek.com')
+        self.client = AsyncOpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
+                                  base_url=r"https://dashscope.aliyuncs.com/compatible-mode/v1")
         self.tool_manager = tool_manager
-        self.logger = LogManager(settings)
-        self.history = []
+        self.context = Context(settings)
+        self.logger = LogManager('logs')
         self.current_plan = "暂无计划 (No Plan Yet)"
-        self.est_num_token = 0
+        self.total_tokens = 0
         self.reset(False)
 
     def reset(self, reload_tools=True):
-        self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
-        self.est_num_token = len(self.history[0]['content']) // 3
+        self.context.reset(self._build_system_prompt())
         self.current_plan = "暂无计划 (No Plan Yet)"
         self.logger.init_log()
         if reload_tools:
@@ -25,23 +26,23 @@ class ReactAgent:
 
     def reload_toolset(self):
         self.tool_manager.reload()
-        if self.history:
-            self.history[0] = {'role': 'system', 'content': self._build_system_prompt()}
+        if self.context():
+            self.context.append("system", self._build_system_prompt())
         else:
-            self.history = [{'role': 'system', 'content': self._build_system_prompt()}]
+            self.context.append("system", self._build_system_prompt())
 
     def load_history(self, history_path):
         self.reset()
         with open(history_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
         lines = ''.join(lines)
-        self.history.append({'role': 'user', 'content': f'以下是对话记录：\n{str(lines)}'})
+        self.context.append(role='user', content=f'以下是对话记录：\n{str(lines)}')
         self.logger.init_log(history_path)
-    
+
     def update_plan(self, new_plan: str):
         self.current_plan = new_plan
-        if self.history and self.history[0]['role'] == 'system':
-            self.history[0]['content'] = self._build_system_prompt()
+        if self.context() and self.context()[0]['role'] == 'system':
+            self.context()[0]['content'] = self._build_system_prompt()
 
     def _build_system_prompt(self):
         from src import system_instructions
@@ -50,53 +51,39 @@ class ReactAgent:
         descriptions = self.tool_manager.get_descriptions()
         structure = self.tool_manager.get_tools_structure()
         return deepcopy(REACT_SYSTEM_PROMPT).replace('{tool_descriptions}', descriptions)\
-                                  .replace('{tool_structure}', structure)\
-                                  .replace('{current_plan}', self.current_plan)
-
-    def _compress_history(self):
-        total_len = sum(len(m['content']) for m in self.history) // 3
-        self.est_num_token = total_len
-        if total_len < settings.TOKEN_LIMIT:
-            return
-
-        sys_msg = self.history[0]
-        first_round = []
-        if len(self.history) >= 3:
-            first_round = self.history[1:3]  # User + Agent
-        retain_count = settings.RETAIN_RECENT * 2
-        recent = self.history[-retain_count:]
-
-        if len(self.history) > 3 + retain_count:
-            omission_hint = {'role': 'system',
-                             'content': '[System Note: Middle conversation history compressed/omitted to save memory]'}
-            self.history = [sys_msg] + first_round + [omission_hint] + recent
-        else:
-            self.history = [sys_msg] + self.history[-retain_count:]
-
-        self.logger.log("System", "History compressed.")
+            .replace('{tool_structure}', structure)\
+            .replace('{current_plan}', self.current_plan)
+    
+    async def model(self, user_input, name='qwen-plus', stream=True):
+        if len(self.context) % 50 == 0:
+            self.context.refresh(self._build_system_prompt())
+        self.context.append(role="user", content=user_input)
+        self.logger.log("User", user_input)
+        if self.context.compress():
+            self.logger.log("System", "History compressed.")
+        return await self.client.chat.completions.create(model=name, messages=self.context(), stream=stream, stream_options={"include_usage": True})
 
     async def step_stream(self, user_input):
-        self.history.append({'role': 'user', 'content': user_input})
-        self.logger.log("User", user_input)
-        self._compress_history()
-
-        response_stream = await self.client.chat.completions.create(
-            model='deepseek-chat', messages=self.history, stream=True
-        )
-
+        response_stream = await self.model(user_input)
         full_content = ""
 
         async for chunk in response_stream:
-            text = chunk.choices[0].delta.content
+            text = ""
+            if chunk.choices and chunk.choices[0].delta.content:
+                text = chunk.choices[0].delta.content
+            
             if text:
                 full_content += text
                 yield text
+            
+            if hasattr(chunk, 'usage') and chunk.usage is not None:
+                self.total_tokens += chunk.usage.total_tokens
 
-        self.history.append({'role': 'assistant', 'content': full_content})
+        self.context.append(role="assistant", content=full_content)
         self.logger.log("Agent", full_content)
         # return full_content
 
     def add_observation(self, content):
-        msg = f'Observation: {content}'
-        self.history.append({'role': 'user', 'content': msg})
+        msg = f'[Observation]: {content}'
+        self.context.append(role="user", content=msg)
         self.logger.log("System", msg)

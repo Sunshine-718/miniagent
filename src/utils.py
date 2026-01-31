@@ -4,8 +4,8 @@ import json
 import importlib
 import inspect
 from src.states import AgentState
-from src import tools
 import datetime
+from src import tools
 
 
 class Parser:
@@ -69,6 +69,48 @@ class Parser:
                         state.error = f"Args Parse Failed: {str(e)}"
                     
         return state
+
+
+class Context:
+    def __init__(self, config):
+        self.config = config
+        self.context = {"messages": []}
+    
+    def __len__(self):
+        return len(self.context["messages"])
+    
+    def __call__(self):
+        return self.context["messages"]
+    
+    def reset(self, system_prompt):
+        self.context = {"messages": [{"role": "system", "content": system_prompt}]}
+    
+    def refresh(self, system_prompt):
+        self.append("system", system_prompt)
+    
+    def append(self, role, content):
+        self.context["messages"].append(dict(role=role, content=content))
+    
+    def compress(self):
+        total_len = sum(len(m['content']) for m in self.context["messages"]) // 3
+        self.est_num_token = total_len
+        if total_len < self.config.TOKEN_LIMIT:
+            return False
+
+        sys_msg = self.context["messages"][0]
+        first_round = []
+        if len(self.context["messages"]) >= 3:
+            first_round = self.context["messages"][1:3]  # User + Agent
+        retain_count = self.config.RETAIN_RECENT * 2
+        recent = self.context["messages"][-retain_count:]
+
+        if len(self.context["messages"]) > 3 + retain_count:
+            omission_hint = {'role': 'system',
+                             'content': '[System Note: Middle conversation history compressed/omitted to save memory]'}
+            self.context["messages"] = [sys_msg] + first_round + [omission_hint] + recent
+        else:
+            self.context["messages"] = [sys_msg] + recent
+        return True
                         
 
 class ToolManager:
@@ -127,9 +169,9 @@ class LogManager:
 
     def init_log(self, path=None):
         if path is None:
-            os.makedirs(self.config.LOG_DIR, exist_ok=True)
+            os.makedirs("logs", exist_ok=True)
             ts = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            path = os.path.join(self.config.LOG_DIR, f'chat_{ts}.md')
+            path = os.path.join("logs", f'chat_{ts}.md')
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(f'# Session {ts}\n\n')
         else:
@@ -150,8 +192,8 @@ class LogManager:
             log_entry = f"\n\n> 🛠️ **System/Observation** ({timestamp})\n\n```\n{content}\n```\n"
 
         try:
-            if not os.path.exists(self.config.LOG_DIR):
-                os.mkdir(self.config.LOG_DIR)
+            if not os.path.exists("logs"):
+                os.mkdir("logs")
             with open(self.log_file, 'a', encoding='utf-8') as f:
                 f.write(log_entry)
         except Exception as e:

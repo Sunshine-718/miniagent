@@ -1,13 +1,11 @@
 from prepare import prepare
 import asyncio
 
-
 async def main():
     from pathlib import Path
-    from src import settings, ToolManager, Parser, ReactAgent, ConsoleUI
+    from src import ToolManager, Parser, ReactAgent, ConsoleUI
     from openai import APIConnectionError, AuthenticationError
     from datetime import datetime
-    settings.validate()
 
     # 依赖注入
     tools = ToolManager()
@@ -20,38 +18,68 @@ async def main():
     while True:
         try:
             ui.rule("New Round")
+            # 处理用户输入
             user_input = ui.input("Prompt > ")
             if not user_input:
                 continue
 
             if user_input.lower() in ['quit', 'exit']:
                 break
+            
+            # 命令处理
             if user_input.lower() == 'reset':
                 agent.reset()
                 ui.console.print("[yellow]Memory Cleared[/yellow]")
                 continue
             elif user_input.lower() == 'reload':
                 ui.console.print("[yellow]Reloading History[/yellow]")
-                path = Path(f'./logs/{input("请输入历史记录文件名 chat_**.md: ").strip()}')
+                fname = input("请输入历史记录文件名 chat_**.md: ").strip()
+                path = Path(f'./logs/{fname}')
                 if path.exists():
                     agent.load_history(path)
-                    ui.console.print("[yellow]History Reloded[/yellow]")
+                    ui.console.print("[yellow]History Reloaded[/yellow]")
                     continue
                 else:
                     ui.console.print("[Red]History not exists[/Red]")
                     continue
 
-            # 处理一轮对话中的多次 ReAct 循环
+            # --- ReAct 循环 ---
             current_prompt = paused + user_input
             paused = ""
             step = 0
+            
             while True:
                 step += 1
-                ui.console.print(f"[dim]Step {step + 1}[/dim]")
+                ui.console.print(f"[dim]Step {step}[/dim]")
 
-                # 1. Agent 思考并生成流
-                response_stream = agent.step_stream(current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]\n[ESTIMATED NUM TOKEN USED: {agent.est_num_token}]")
-                full_response = await ui.render_stream_loop(response_stream)
+                # 构造 Prompt，直接读取 agent.usage (如果是第一轮则为 None)
+                prompt_content = current_prompt + f"[CURRENT STEP: {step}]\n[CURRENT TIME: {datetime.now()}]\n[TOTAL TOKEN USAGE: {agent.total_tokens}]"
+
+                # 1. 创建生成任务 (允许打断)
+                # agent.step_stream 现在直接 yield 字符串
+                gen_coro = ui.render_stream_loop(agent.step_stream(prompt_content))
+                task = asyncio.create_task(gen_coro)
+
+                full_response = ""
+                try:
+                    # 等待 UI 渲染完成
+                    full_response = await task
+                except KeyboardInterrupt:
+                    # 【核心功能】捕获 Ctrl+C
+                    task.cancel() # 取消正在进行的流式任务
+                    try:
+                        await task # 等待任务真正结束
+                    except asyncio.CancelledError:
+                        pass # 忽略取消异常
+                    
+                    ui.console.print("\n[yellow][System] Generation Interrupted by User.[/yellow]")
+                    paused = "System Hint: User Interrupted the thought process manually.\n\n"
+                    # 这里选择 break 跳出 ReAct 循环回到 Prompt 输入，还是 continue 取决于你想保留多少上下文
+                    # 这里选择回到用户输入
+                    break
+                except Exception as e:
+                    ui.print_error(f"Runtime Error: {e}")
+                    break
 
                 # 2. 解析响应
                 state = Parser.parse_response(full_response)
@@ -59,8 +87,10 @@ async def main():
                 if state.plan:
                     agent.update_plan(state.plan)
 
-                # 3. 各种分支处理
+                # 3. 分支处理
                 if state.final_answer:
+                    # 打印最终 Token 使用量
+                    ui.console.print(f"[dim green]Total Tokens: {agent.total_tokens}[/dim green]")
                     break
 
                 if state.is_quit:
@@ -86,26 +116,24 @@ async def main():
                 if state.has_action:
                     result = tools.execute(state.action_name, state.action_args or {})
                     ui.print_observation(result)
-                    agent.add_observation(result)  # 写入历史
-                    # 下一轮循环自动开始，无需修改 prompt，因为历史记录里已经有了 Observation
+                    agent.add_observation(result)
                     current_prompt = "Observation: (See history for result)"
                     ui.print_observation(current_prompt)
 
                 if not state.has_action and not state.final_answer:
-                    current_prompt = f"System Hint: You stopped without an Action or Answer. Please continue properly using '## Thought' or '## Action' sections."
+                    current_prompt = f"System Hint: You stopped without an Action or Answer. Please continue."
                     ui.print_observation(current_prompt)
 
         except KeyboardInterrupt:
-            ui.console.print("\n[yellow]Paused. Type 'quit' to exit or Enter to continue.[/yellow]")
-            paused = "System Hint: User Interrupted.\n\n"
+            # 外层捕获：如果在输入阶段按 Ctrl+C
+            ui.console.print("\n[yellow]Paused. Type 'quit' to exit.[/yellow]")
             continue
         except APIConnectionError:
             ui.print_error("无网络连接，正在退出...")
             break
         except AuthenticationError:
-            ui.print_error("API key错误，请检查 .env 文件的 DEEPSEEK_API_KEY 行，正在退出")
+            ui.print_error("API key错误，请检查环境变量...")
             break
-
 
 if __name__ == "__main__":
     prepare()

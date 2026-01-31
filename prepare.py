@@ -93,9 +93,9 @@ def prepare():
                     user_value = ""
 
                     # 根据不同的 Key 进行美化询问
-                    if key_name == 'DEEPSEEK_API_KEY':
+                    if key_name == 'DASHSCOPE_API_KEY':
                         console.print(f"\n[bold cyan]配置 {key_name}[/]")
-                        console.print("请访问 [link=https://platform.deepseek.com/api_keys]Deepseek 控制台[/] 获取 Key")
+                        console.print("请访问 [link=https://help.aliyun.com/zh/model-studio/get-api-key?spm=a2c4g.11186623.help-menu-2400256.d_2_0_0.1def6a1b9yDjg6]阿里云[/] 获取 Key")
                         user_value = Prompt.ask("请输入 API Key")  # password=True 可以隐藏输入内容
 
                     elif key_name == "JINA_API_TOKEN":

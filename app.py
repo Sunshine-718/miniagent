@@ -1,8 +1,7 @@
 import chainlit as cl
-from src import settings, ToolManager, Parser, ReactAgent
+from src import ToolManager, Parser, ReactAgent
 from datetime import datetime
 import os
-import sys
 import shutil
 import asyncio
 
@@ -18,11 +17,11 @@ async def setup_wizard():
     config_data = {}
 
     # 1. DeepSeek Key (必填)
-    res = await cl.AskUserMessage(content="请配置 **DeepSeek API Key** (必填)\n您可以访问 [Deepseek 控制台](https://platform.deepseek.com/api_keys) 获取。", timeout=600).send()
+    res = await cl.AskUserMessage(content="请配置 **Dashscope API Key** (必填)\n您可以访问 [阿里云](https://help.aliyun.com/zh/model-studio/get-api-key?spm=a2c4g.11186623.help-menu-2400256.d_2_0_0.1def6a1b9yDjg6) 获取。", timeout=600).send()
     if not res:
         await cl.Message(content="❌ 配置超时或取消，请刷新页面重试。").send()
         return False
-    config_data["DEEPSEEK_API_KEY"] = res["output"].strip()
+    config_data["DASHSCOPE_API_KEY"] = res["output"].strip()
 
     # 2. Jina Token (可选)
     res = await cl.AskUserMessage(content="请配置 **Jina API Token** (可选，强烈推荐)\n用于联网搜索功能。如果不需要，请直接回复 `skip` 或 `跳过`。", timeout=600).send()
@@ -82,7 +81,7 @@ async def set_starters():
         ),
         cl.Starter(
             label="查询余额",
-            message="帮我检查一下当前 DeepSeek API 的余额。",
+            message="帮我检查一下当前 Qwen API 的余额。",
         ),
         cl.Starter(
             label="今天新闻",
@@ -110,15 +109,9 @@ async def set_starters():
 @cl.on_chat_start
 async def start():
     if not os.path.exists(".env"):
-        success = await setup_wizard()
+        await setup_wizard()
         return
 
-    try:
-        import src
-        src.config.settings.validate()
-    except Exception as e:
-        await cl.Message(content=f"⚠️ **配置验证失败**: {str(e)}\n\n请检查 `.env` 文件格式，或删除该文件后刷新页面重新配置。", author="System").send()
-        return
     try:
         tools = ToolManager() 
         agent = ReactAgent(tools)
@@ -177,7 +170,7 @@ async def main(message: cl.Message):
             system_injection = (
                 f"\n[CURRENT STEP: {step_count}]"
                 f"\n[CURRENT TIME: {datetime.now()}]"
-                f"\n[ESTIMATED NUM TOKEN USED: {agent.est_num_token}]"
+                f"\n[ESTIMATED NUM TOKEN USED: {agent.total_tokens}]"
             )
 
             full_response = ""

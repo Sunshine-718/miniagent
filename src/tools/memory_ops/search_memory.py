@@ -1,6 +1,24 @@
 import json
 from ._utils import load_index
 
+
+def _read_memory_file(file_path: str) -> tuple:
+    """安全读取记忆文件，返回 (value, timestamp, category) 或 (None, None, None)"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        # 从文件路径反推 category（兼容现有结构）
+        import os
+        category = os.path.basename(os.path.dirname(file_path))
+        return (
+            data.get('value', ''),
+            data.get('timestamp', '未知'),
+            category
+        )
+    except Exception:
+        return None, None, None
+
+
 def search_memory(keyword: str, fuzzy: bool = True) -> str:
     """
     通过索引搜索记忆
@@ -16,24 +34,14 @@ def search_memory(keyword: str, fuzzy: bool = True) -> str:
     results = []
     seen_keys = set()
 
-    # 辅助读取函数
-    def get_memory_content(key):
-        info = index['memories'][key]
-        try:
-            with open(info['file_path'], 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return data.get('value', ''), data.get('timestamp', '未知'), info['category']
-        except Exception:
-            return None, None, None
-
     # 1. 精确匹配 (Key匹配 或 关键词索引匹配)
     candidates = set()
     if keyword_lower in index['memories']:
-        candidates.add((keyword_lower, 100)) # Key 完全匹配
+        candidates.add((keyword_lower, 100))  # Key 完全匹配
     
     if keyword_lower in index['keyword_index']:
         for k in index['keyword_index'][keyword_lower]:
-            candidates.add((k, 90)) # 关键词索引匹配
+            candidates.add((k, 90))  # 关键词索引匹配
 
     # 2. 模糊搜索 (如果不满足精确匹配)
     if fuzzy:
@@ -47,16 +55,24 @@ def search_memory(keyword: str, fuzzy: bool = True) -> str:
                 for k in index['keyword_index'][kw]:
                     candidates.add((k, 50))
 
-    # 3. 统一提取内容
+    # 3. 统一读取内容
     for key, score in candidates:
-        if key in seen_keys: continue
+        if key in seen_keys:
+            continue
         seen_keys.add(key)
         
-        content, ts, cat = get_memory_content(key)
-        if content:
+        info = index['memories'].get(key)
+        if not info:
+            continue
+            
+        content, ts, cat = _read_memory_file(info['file_path'])
+        if content is not None:
             results.append({
-                "key": key, "value": content, "timestamp": ts, 
-                "category": cat, "score": score
+                "key": key,
+                "value": content,
+                "timestamp": ts,
+                "category": cat,
+                "score": score
             })
 
     # 4. 格式化输出
@@ -65,9 +81,10 @@ def search_memory(keyword: str, fuzzy: bool = True) -> str:
         return "未找到相关记忆"
 
     output = f"找到 {len(results)} 条相关记忆：\n"
-    for i, res in enumerate(results[:5], 1): # 只显示前5条
+    for i, res in enumerate(results[:5], 1):
         preview = res['value'][:100].replace('\n', ' ')
-        if len(res['value']) > 100: preview += "..."
+        if len(res['value']) > 100:
+            preview += "..."
         output += f"{i}. [{res['key']}] (分类: {res['category']}, 时间: {res['timestamp']})\n"
         output += f"   内容: {preview}\n"
 
