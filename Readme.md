@@ -10,6 +10,24 @@
 ## 📢 最新更新
 
 <details>
+<summary><strong>🔄 2026-01-31 - LLM 后端全面迁移至 Qwen（通义千问）</strong></summary>
+
+### ✅ 核心变更
+
+1. **模型服务切换**
+   - 主力 LLM 已从 DeepSeek 切换至 **Qwen（通义千问）**，支持更长的上下文。
+2. **认证方式改变**
+   - 使用阿里云百炼平台 `DASHSCOPE_API_KEY` 替代旧密钥。
+3. **文档与工具同步**
+   - `README.md` 全面更新，`.env` 示例、环境要求、工具引用全部对齐。
+4. **长期兼容性保障**
+   - 所有原有功能、API 调用逻辑、工具链均无缝适配，零代码修改。
+
+> 💡 提示：首次运行时，系统将自动检测 `.env` 并引导你完成 Qwen 配置。
+
+</details>
+
+<details>
 <summary><strong>🌐 2026-01-30 - Web UI 重磅发布：基于 Chainlit 的现代化界面</strong></summary>
 
 ### 🎉 重大更新：Web 界面正式上线
@@ -122,7 +140,7 @@ chainlit run app.py --host 192.168.1.100 --port 8000
    - **手动配置**：传统方式，保留灵活性
 4. **配置优化**
 
-   - 移除了 `DEEPSEEK_BASE_URL` 配置项
+   - 新增 `QWEN_BASE_URL` 配置项（可选，用于自定义 Qwen API 地址）
    - 简化 `.env` 文件，现在只需配置4个关键项
 5. **Prompt 增强**
 
@@ -206,7 +224,7 @@ chainlit run app.py --host 192.168.1.100 --port 8000
 ### 环境要求
 
 - [Python](https://www.python.org/downloads/) (不兼容Python 3.14)
-- [DeepSeek API Key](https://platform.deepseek.com/api_keys)
+- [Qwen API Key](https://bailian.console.aliyun.com/)（阿里云百炼控制台）
 - [Jina API Token](https://jina.ai/zh-CN/) (用于联网搜索)
 - [QQ邮箱](https://wx.mail.qq.com/)授权码 (可选，用于邮件功能)
 
@@ -314,7 +332,7 @@ cp .env.template .env
 
 ```bash
 # 核心配置
-DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
+DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxx
 
 # 增强功能配置
 JINA_API_TOKEN=jina_xxxxxxxxxxxx
@@ -447,7 +465,6 @@ miniagent 已成功完成多个实际项目，展示了其强大的多领域能�
 - `scrape_web_page` / `read_url_jina` - 网页内容读取与Markdown转换
 - `get_weather` - 实时天气查询
 - `send_email_via_qq` - 邮件发送（支持附件）
-- `check_deepseek_balance` - 查询DeepSeek API账户余额（实时监控使用成本）
 
 ### 💻 system_ops (系统操作)
 
