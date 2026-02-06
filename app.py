@@ -80,8 +80,8 @@ async def set_starters():
             # icon="/public/learn.svg",
         ),
         cl.Starter(
-            label="查询余额",
-            message="帮我检查一下当前 Qwen API 的余额。",
+            label="查看邮箱",
+            message="帮我看一下最近有什么新邮件。",
         ),
         cl.Starter(
             label="今天新闻",

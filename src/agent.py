@@ -41,8 +41,8 @@ class ReactAgent:
 
     def update_plan(self, new_plan: str):
         self.current_plan = new_plan
-        if self.context() and self.context()[0]['role'] == 'system':
-            self.context()[0]['content'] = self._build_system_prompt()
+        # 注意：current_plan不再出现在system prompt中，所以不需要更新system prompt
+        # 保留这个方法是为了兼容性，其他代码可能调用它来更新current_plan属性
 
     def _build_system_prompt(self):
         from src import system_instructions
@@ -51,9 +51,8 @@ class ReactAgent:
         descriptions = self.tool_manager.get_descriptions()
         structure = self.tool_manager.get_tools_structure()
         return deepcopy(REACT_SYSTEM_PROMPT).replace('{tool_descriptions}', descriptions)\
-            .replace('{tool_structure}', structure)\
-            .replace('{current_plan}', self.current_plan)
-    
+            .replace('{tool_structure}', structure)
+
     async def model(self, user_input, name='qwen-plus', stream=True):
         if len(self.context) % 50 == 0:
             self.context.refresh(self._build_system_prompt())
@@ -61,7 +60,13 @@ class ReactAgent:
         self.logger.log("User", user_input)
         if self.context.compress():
             self.logger.log("System", "History compressed.")
-        return await self.client.chat.completions.create(model=name, messages=self.context(), stream=stream, stream_options={"include_usage": True})
+        return await self.client.chat.completions.create(
+            model=name,
+            messages=self.context(),
+            stream=stream,
+            stream_options={"include_usage": True},
+            temperature=0.5
+        )
 
     async def step_stream(self, user_input):
         response_stream = await self.model(user_input)
@@ -71,11 +76,11 @@ class ReactAgent:
             text = ""
             if chunk.choices and chunk.choices[0].delta.content:
                 text = chunk.choices[0].delta.content
-            
+
             if text:
                 full_content += text
                 yield text
-            
+
             if hasattr(chunk, 'usage') and chunk.usage is not None:
                 self.total_tokens += chunk.usage.total_tokens
 
